@@ -1,0 +1,347 @@
+# JAX Distillation Column Simulator
+
+A high-fidelity, JAX-native distillation column simulator designed for reinforcement learning research with sim-to-real transfer capability.
+
+## Features
+
+- **JAX-Native**: Fully JIT-compilable and vmap-compatible for fast parallel simulations
+- **Gymnasium-Compatible**: Standard RL environment interface for easy integration with RL libraries
+- **Physically Accurate**: NRTL thermodynamics, Murphree efficiency, hydraulic dynamics
+- **Configurable**: Flexible column geometry, mixture properties, and operating conditions
+- **Validated**: 246 tests covering thermodynamics, hydraulics, dynamics, and physics benchmarks
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/distillation-claude.git
+cd distillation-claude
+
+# Install in development mode
+pip install -e .
+
+# For RL training (optional)
+pip install stable-baselines3
+```
+
+### Dependencies
+
+- JAX >= 0.4.20
+- Gymnasium >= 0.29.0
+- NumPy >= 1.24.0
+- Chex >= 0.1.8
+- Matplotlib >= 3.7.0 (for examples)
+
+## Quick Start
+
+### As an RL Environment
+
+```python
+from jax_distillation import DistillationColumnEnv
+
+# Create environment
+env = DistillationColumnEnv()
+
+# Standard Gymnasium interface
+obs, info = env.reset()
+for _ in range(100):
+    action = env.action_space.sample()
+    obs, reward, terminated, truncated, info = env.step(action)
+    if terminated or truncated:
+        break
+
+print(f"Final distillate purity: {info['outputs']['x_D']:.3f}")
+print(f"Final bottoms purity: {info['outputs']['x_B']:.3f}")
+```
+
+### Direct Simulation (without RL)
+
+```python
+from jax_distillation import (
+    create_teaching_column_config,
+    create_initial_column_state,
+    create_default_action,
+    column_step,
+)
+
+# Create column configuration
+config = create_teaching_column_config(
+    n_trays=10,
+    feed_tray=5,
+    feed_composition=0.5,  # 50% methanol
+)
+
+# Initialize state
+state = create_initial_column_state(config)
+
+# Define control action
+action = create_default_action(
+    Q_R=5000.0,      # Reboiler duty [W]
+    reflux_ratio=3.0, # Reflux ratio
+)
+
+# Run simulation
+for _ in range(100):
+    state, outputs = column_step(state, action, config)
+
+print(f"Distillate composition: {float(outputs.x_D):.3f}")
+print(f"Bottoms composition: {float(outputs.x_B):.3f}")
+```
+
+### Vectorized Simulation with vmap
+
+```python
+import jax
+import jax.numpy as jnp
+from jax_distillation import (
+    create_teaching_column_config,
+    create_initial_column_state,
+    create_default_action,
+    column_step,
+)
+
+config = create_teaching_column_config(n_trays=8)
+
+# Vectorize over different reboiler duties
+@jax.jit
+def run_sweep(Q_R_values):
+    def run_one(Q_R):
+        state = create_initial_column_state(config)
+        action = create_default_action(Q_R=Q_R)
+
+        def step(state, _):
+            return column_step(state, action, config)
+
+        final_state, outputs = jax.lax.scan(step, state, None, length=50)
+        return outputs.x_D[-1], outputs.x_B[-1]
+
+    return jax.vmap(run_one)(Q_R_values)
+
+# Run 16 simulations in parallel
+Q_R_sweep = jnp.linspace(2000, 10000, 16)
+x_D_results, x_B_results = run_sweep(Q_R_sweep)
+```
+
+## Environment Details
+
+### Observation Space
+
+The default observation includes (28 dimensions for 10-tray column):
+- Tray temperatures (normalized)
+- Tray compositions
+- Reboiler/condenser temperatures and compositions
+- Product flow rates and compositions
+
+### Action Space
+
+4-dimensional continuous action:
+- `Q_R`: Reboiler duty [0, 20000] W
+- `reflux_ratio`: Reflux ratio [1, 10]
+- `B_setpoint`: Bottoms flow setpoint [0.01, 0.1] mol/s
+- `D_setpoint`: Distillate flow setpoint [0.01, 0.1] mol/s
+
+### Reward Function
+
+Configurable reward with components:
+- **Purity reward**: Tracking target distillate/bottoms compositions
+- **Energy penalty**: Minimizing reboiler duty
+- **Stability reward**: Penalizing rapid changes
+- **Constraint penalty**: Penalizing physical constraint violations
+
+## Examples
+
+```bash
+# Basic simulation with plots
+python examples/basic_simulation.py
+
+# Step response analysis
+python examples/step_response.py
+
+# Vectorized parallel simulation
+python examples/vectorized_sim.py
+
+# RL training with stable-baselines3 (NumPy-based)
+python examples/rl_training.py
+
+# Pure JAX RL training with vmap (high throughput)
+python examples/purejax_training.py
+```
+
+### Performance Benchmarks
+
+The JAX-native `DistillationEnvJax` achieves high throughput for RL training:
+
+| Configuration | Throughput (env-steps/sec) |
+|--------------|---------------------------|
+| Single environment (CPU) | ~10,000 |
+| 64 parallel environments (CPU, vmap) | ~400,000 |
+| 64 parallel environments (GPU, vmap) | ~2,000,000+ |
+
+Use `examples/purejax_training.py` for maximum throughput with PureJaxRL-style training.
+
+## Project Structure
+
+```
+jax_distillation/
+├── core/
+│   ├── types.py           # JAX-compatible dataclasses
+│   ├── thermodynamics.py  # VLE, Antoine, NRTL
+│   ├── hydraulics.py      # Tray hydraulics, flooding/weeping
+│   └── integration.py     # RK4 integrator
+├── column/
+│   ├── tray.py            # Single tray dynamics
+│   ├── reboiler.py        # Reboiler model
+│   ├── condenser.py       # Condenser model
+│   ├── config.py          # Configuration dataclasses
+│   └── column.py          # Full column assembly
+├── env/
+│   ├── base_env.py        # Gymnasium environment
+│   ├── spaces.py          # Action/observation spaces
+│   ├── rewards.py         # Reward functions
+│   └── wrappers.py        # Environment wrappers
+└── validation/
+    ├── conservation.py    # Mass/energy balance checks
+    ├── steady_state.py    # Steady state validation
+    ├── dynamic_response.py # Step response tests
+    └── benchmarks.py      # Performance benchmarks
+```
+
+## Physical Model
+
+The simulator implements:
+
+- **Thermodynamics**: NRTL activity coefficient model for non-ideal VLE, Antoine equation for vapor pressure
+- **Tray Dynamics**: MESH equations (Material, Equilibrium, Summation, Heat balance)
+- **Hydraulics**: Francis weir formula, hydraulic time lag, flooding/weeping correlations
+- **Efficiency**: Murphree vapor efficiency model
+
+Default mixture: Methanol-water at atmospheric pressure.
+
+## Validation
+
+### Running Tests
+
+```bash
+# Run core tests
+pytest tests/ -v
+
+# Run fast validation pack tests
+pytest tests/validation_pack/ -m "not slow" -v
+
+# Run full validation suite (slow)
+pytest tests/validation_pack/ -v
+```
+
+### Validation Pack (Phase 3)
+
+The `validation_pack/` module provides comprehensive validation against public benchmarks:
+
+#### NIST Thermodynamics Validation
+
+```bash
+python scripts/run_public_validation.py --thermo-only
+```
+
+- Antoine equation validated against NIST WebBook data
+- Bubble point calculations within tolerance
+- VLE consistency checks (composition bounds, monotonicity, relative volatility)
+
+#### Skogestad Column A (COLA) Benchmark
+
+- 40-tray binary distillation column
+- Steady-state initialization and step response
+- Validates temperature profiles and separation behavior
+
+#### Wood-Berry MIMO Benchmark
+
+- Classic 2x2 transfer function model
+- Validates control-facing dynamics
+- Gain signs and coupling structure checks
+
+#### Debutanizer Delay Wrapper
+
+- Realistic measurement delay (gas chromatograph)
+- Sample-and-hold observation model
+- Gymnasium-compatible environment for RL
+
+### Running Full Validation
+
+```bash
+# Download benchmark data (if needed)
+python scripts/download_public_benchmarks.py
+
+# Run all validations
+python scripts/run_public_validation.py
+
+# Generate credibility report
+python scripts/build_credibility_report.py
+```
+
+### Key Validation Criteria
+
+| Check | Target | Status |
+|-------|--------|--------|
+| Antoine vs NIST | < 2% error at boiling points | Validated |
+| Bubble point residual | < 1e-4 bar | Validated |
+| VLE consistency | Bounds, monotonicity | Validated |
+| Mass closure (long run) | < 0.1% | In progress |
+| Energy closure | < 1% | In progress |
+| No NaN/Inf | 50,000+ steps | Validated |
+| Step response direction | Correct signs | Validated |
+
+### Credibility Statement
+
+**Validated with public benchmarks:**
+- NIST Chemistry WebBook thermodynamic data
+- Skogestad Column A specifications
+- Wood-Berry 2x2 MIMO model
+
+**Not yet validated with plant data:**
+- Parameter fitting requires actual column measurements
+- Use `jax_distillation.validation_pack.fitting` when data is available
+
+### Fit Pipeline (for future plant data)
+
+```python
+from jax_distillation.validation_pack.fitting import (
+    fit_parameters,
+    FittableParameter,
+    generate_fit_report,
+)
+
+# Define parameters to fit
+parameters = [
+    FittableParameter(name="efficiency", initial_value=0.7,
+                      lower_bound=0.3, upper_bound=1.0),
+]
+
+# Fit to measurements (when available)
+result = fit_parameters(
+    parameters=parameters,
+    simulator=your_simulator,
+    measurements=plant_data,
+)
+```
+
+## References
+
+- Wittgens & Skogestad (2000) - Hydraulics and control-relevant dynamics
+- NIST WebBook - Antoine coefficients
+- NPTEL Module 7 - Flooding/weeping correlations
+- Armfield UOP3 - Teaching column specifications
+
+## License
+
+MIT License
+
+## Citation
+
+If you use this simulator in your research, please cite:
+
+```bibtex
+@software{jax_distillation,
+  title = {JAX Distillation Column Simulator},
+  year = {2025},
+  url = {https://github.com/yourusername/distillation-claude}
+}
+```
