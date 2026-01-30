@@ -279,6 +279,7 @@ python scripts/build_credibility_report.py
 | Bubble point residual | < 1e-4 bar | Validated |
 | VLE consistency | Bounds, monotonicity | Validated |
 | Mass closure (COLA benchmark) | < 0.1% | Validated (0.069%) |
+| Energy closure | < 1% | Not tested |
 | No NaN/Inf | 10,000+ steps | Validated |
 | Step response direction | Correct signs | Validated |
 | Temperature profile | Monotonic (top→bottom) | Validated |

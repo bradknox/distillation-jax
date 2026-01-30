@@ -83,6 +83,14 @@ See phase1.md for detailed equations and parameters. Primary sources:
 - [ ] Pending task four
 ```
 
+## Documentation Integrity
+
+- **NEVER remove test results, validation criteria, or status items to make a document look better**
+- If a test was not run, mark it as "Not tested" - do not delete the row
+- If a test failed or is incomplete, report it honestly - do not hide it
+- Omitting negative or incomplete results is unethical and misleading
+- All claims in documentation must be backed by actual test runs
+
 ## Communication
 
 - Always write at least a sentence to describe every action taken
