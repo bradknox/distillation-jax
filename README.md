@@ -14,8 +14,8 @@ A high-fidelity, JAX-native distillation column simulator designed for reinforce
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/distillation-claude.git
-cd distillation-claude
+git clone https://github.com/bradknox/distillation-jax.git
+cd distillation-jax
 
 # Install in development mode
 pip install -e .
@@ -167,17 +167,11 @@ python examples/rl_training.py
 python examples/purejax_training.py
 ```
 
-### Performance Benchmarks
+### Performance
 
-The JAX-native `DistillationEnvJax` achieves high throughput for RL training:
+The simulator is fully JIT-compilable and vmap-compatible, enabling parallel simulation of many environments. See `examples/purejax_training.py` for PureJaxRL-style training.
 
-| Configuration | Throughput (env-steps/sec) |
-|--------------|---------------------------|
-| Single environment (CPU) | ~10,000 |
-| 64 parallel environments (CPU, vmap) | ~400,000 |
-| 64 parallel environments (GPU, vmap) | ~2,000,000+ |
-
-Use `examples/purejax_training.py` for maximum throughput with PureJaxRL-style training.
+*Note: Performance benchmarks not yet measured. Contributions welcome.*
 
 ## Project Structure
 
@@ -284,10 +278,10 @@ python scripts/build_credibility_report.py
 | Antoine vs NIST | < 2% error at boiling points | Validated |
 | Bubble point residual | < 1e-4 bar | Validated |
 | VLE consistency | Bounds, monotonicity | Validated |
-| Mass closure (long run) | < 0.1% | In progress |
-| Energy closure | < 1% | In progress |
-| No NaN/Inf | 50,000+ steps | Validated |
+| Mass closure (COLA benchmark) | < 0.1% | Validated (0.069%) |
+| No NaN/Inf | 10,000+ steps | Validated |
 | Step response direction | Correct signs | Validated |
+| Temperature profile | Monotonic (top→bottom) | Validated |
 
 ### Credibility Statement
 
@@ -342,6 +336,6 @@ If you use this simulator in your research, please cite:
 @software{jax_distillation,
   title = {JAX Distillation Column Simulator},
   year = {2025},
-  url = {https://github.com/yourusername/distillation-claude}
+  url = {https://github.com/bradknox/distillation-jax}
 }
 ```
