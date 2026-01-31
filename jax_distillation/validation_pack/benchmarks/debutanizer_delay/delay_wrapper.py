@@ -130,6 +130,30 @@ class DelayWrapper(gym.Wrapper):
                 **delay_space.spaces,
             })
 
+    def _get_feed_composition(self) -> float:
+        """Get feed composition from base environment.
+
+        Attempts to extract the feed composition (z_F) from the environment's
+        configuration. Falls back to 0.5 if not available.
+
+        Returns:
+            Feed composition (mole fraction of light component).
+        """
+        # Try to get from unwrapped environment's config
+        if hasattr(self.env, 'unwrapped'):
+            unwrapped = self.env.unwrapped
+            if hasattr(unwrapped, 'config'):
+                config = unwrapped.config
+                if hasattr(config, 'feed') and hasattr(config.feed, 'z_F'):
+                    return float(config.feed.z_F)
+        # Try direct config access
+        if hasattr(self.env, 'config'):
+            config = self.env.config
+            if hasattr(config, 'feed') and hasattr(config.feed, 'z_F'):
+                return float(config.feed.z_F)
+        # Fallback to default
+        return 0.5
+
     def _get_dead_time(self) -> float:
         """Get dead time (possibly stochastic).
 
@@ -218,8 +242,11 @@ class DelayWrapper(gym.Wrapper):
                         self._last_measured_x_B = np.nan
                     elif self.config.initial_value_mode == "feed":
                         # Use feed composition as initial guess
-                        self._last_measured_x_D = 0.5  # Placeholder
-                        self._last_measured_x_B = 0.5  # Placeholder
+                        feed_z = self._get_feed_composition()
+                        # Distillate is enriched in light component
+                        self._last_measured_x_D = min(feed_z + 0.3, 0.95)
+                        # Bottoms is depleted in light component
+                        self._last_measured_x_B = max(feed_z - 0.3, 0.05)
                     # "last" mode keeps previous value
 
             self._last_measurement_time = self._simulation_time

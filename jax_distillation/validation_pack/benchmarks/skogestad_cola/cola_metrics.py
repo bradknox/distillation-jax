@@ -221,11 +221,59 @@ def compute_cola_metrics(benchmark_results: Dict) -> ColaValidationResult:
     )
     details["boilup_step"] = boilup_analysis
 
-    # NRMSE for step responses (comparing shape, not exact values)
-    # Since we don't have reference trajectories, use a synthetic comparison
-    # based on expected first-order behavior
-    reflux_nrmse = 0.0  # Placeholder - would need reference data
-    boilup_nrmse = 0.0  # Placeholder - would need reference data
+    # NRMSE for step responses - fit first-order model and compute residual
+    # This measures how well the response follows expected first-order dynamics
+    def compute_step_response_nrmse(trajectory: np.ndarray, times: np.ndarray) -> float:
+        """Compute NRMSE of trajectory vs fitted first-order response.
+
+        Fits tau to the trajectory, then computes NRMSE of residual.
+        """
+        from scipy.optimize import curve_fit
+
+        if len(trajectory) < 3:
+            return 0.0
+
+        y0 = trajectory[0]
+        y_inf = trajectory[-1]
+
+        if abs(y_inf - y0) < 1e-10:
+            return 0.0  # No change, perfect fit
+
+        def first_order(t, tau):
+            return y_inf - (y_inf - y0) * np.exp(-t / max(tau, 0.1))
+
+        try:
+            # Fit time constant
+            popt, _ = curve_fit(
+                first_order, times, trajectory,
+                p0=[50.0], bounds=([0.1], [1000.0]),
+                maxfev=500
+            )
+            tau = popt[0]
+
+            # Compute fitted trajectory
+            y_fit = first_order(times, tau)
+
+            # NRMSE
+            rmse = np.sqrt(np.mean((trajectory - y_fit) ** 2))
+            range_val = abs(y_inf - y0)
+            nrmse = rmse / max(range_val, 1e-6)
+            return nrmse
+        except Exception:
+            return 1.0  # Failed fit, max error
+
+    # Extract step response trajectories
+    r_traj = r_step["step"]
+    b_traj = q_step["step"]
+
+    reflux_nrmse = compute_step_response_nrmse(
+        np.array(r_traj.x_D),
+        np.array(r_traj.times)
+    )
+    boilup_nrmse = compute_step_response_nrmse(
+        np.array(b_traj.x_B),
+        np.array(b_traj.times)
+    )
 
     # Temperature monotonicity
     T_profile = ss["trajectory"].T_profile

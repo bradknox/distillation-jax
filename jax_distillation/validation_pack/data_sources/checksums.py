@@ -64,8 +64,14 @@ def verify_checksum(
 # Known checksums for benchmark data files
 # These are computed when files are first obtained and verified
 KNOWN_CHECKSUMS = {
-    # Placeholder - will be populated when actual files are downloaded
-    # Format: "filename": "sha256_hexdigest"
+    # Data files in data/ directory
+    "columns/pilot_column.json": "sha256:4c8a6876adc979a72bc59cf2666f9b6b8b1e1be1f2d83476d25f15e084709768",
+    "columns/teaching_column.json": "sha256:7d9512b44da8a664320d7031affb0314d35510fa3c784f9ee0ba0ba3dae6251d",
+    "mixtures/ethanol_water.json": "sha256:eef972b773786793d91b9c7db8cd98421fdb1eef724cd7fbfcc5a46afeda45e7",
+    "mixtures/methanol_water.json": "sha256:473a49f321fc33ebb0b3a6a6d55462ff0861b440dc8ee3ebbbe0f629db8ae5e4",
+    # Third-party benchmark files (to be populated when downloaded)
+    # "nist_methanol_antoine.json": "sha256:...",
+    # "nist_water_antoine.json": "sha256:...",
 }
 
 

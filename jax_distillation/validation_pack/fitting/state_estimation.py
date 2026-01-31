@@ -256,21 +256,67 @@ class MovingHorizonEstimator:
             self._u_history.pop(0)
 
     def estimate(self) -> Optional[np.ndarray]:
-        """Estimate current state from measurement history.
+        """Estimate current state via moving horizon optimization.
+
+        Solves the optimization problem:
+            min sum_t ||y_t - H @ x_t||^2 + lambda * sum_t ||x_{t+1} - x_t||^2
+
+        where the first term penalizes measurement residuals and the
+        second term enforces temporal smoothness (process model).
 
         Returns:
-            State estimate, or None if insufficient data.
+            State estimate at the current time, or None if insufficient data.
         """
         if len(self._y_history) < 2:
             return None
 
-        # Placeholder: return last measurement extended to state dimension
-        # Full implementation would solve optimization problem
-        y_last = self._y_history[-1]
-        x_est = np.zeros(self.n_states)
-        x_est[: min(len(y_last), self.n_states)] = y_last[: min(len(y_last), self.n_states)]
+        from scipy.optimize import minimize
 
-        return x_est
+        n_horizon = len(self._y_history)
+        n_meas = len(self._y_history[0])
+
+        # Initial guess: extend measurements to state dimension
+        x0 = np.zeros(n_horizon * self.n_states)
+        for t in range(n_horizon):
+            y_t = self._y_history[t]
+            x0[t * self.n_states : t * self.n_states + min(n_meas, self.n_states)] = (
+                y_t[: min(n_meas, self.n_states)]
+            )
+
+        # Regularization weight for smoothness
+        lambda_smooth = 0.1
+
+        def objective(x_flat: np.ndarray) -> float:
+            """Minimize measurement residuals + process smoothness."""
+            x_traj = x_flat.reshape(n_horizon, self.n_states)
+
+            # Measurement residual: ||y_t - x_t[:n_meas]||^2
+            meas_resid = 0.0
+            for t in range(n_horizon):
+                y_t = self._y_history[t]
+                x_t = x_traj[t]
+                # Assume simple observation model: y = x[:n_meas]
+                n_obs = min(len(y_t), self.n_states)
+                meas_resid += np.sum((x_t[:n_obs] - y_t[:n_obs]) ** 2)
+
+            # Process smoothness: penalize large state changes
+            smooth_resid = 0.0
+            for t in range(1, n_horizon):
+                smooth_resid += np.sum((x_traj[t] - x_traj[t - 1]) ** 2)
+
+            return meas_resid + lambda_smooth * smooth_resid
+
+        # Run optimization
+        result = minimize(
+            objective,
+            x0,
+            method="L-BFGS-B",
+            options={"maxiter": 100, "disp": False},
+        )
+
+        # Return final state estimate (last time point in horizon)
+        x_final = result.x.reshape(n_horizon, self.n_states)[-1]
+        return x_final
 
 
 def run_state_estimation(

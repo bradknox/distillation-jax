@@ -43,8 +43,14 @@ from jax_distillation.core.thermodynamics import (
 )
 from jax_distillation.core.hydraulics import (
     liquid_density,
+    vapor_density,
+    surface_tension,
     static_liquid_outflow,
     update_liquid_outflow,
+    flooding_velocity,
+    flooding_ratio,
+    weep_point_velocity,
+    is_weeping,
 )
 from jax_distillation.core.types import ThermoParams
 
@@ -101,6 +107,8 @@ class ColumnOutputs(NamedTuple):
         Q_C: Condenser duty [W].
         V: Vapor flow profile [mol/s], shape (n_trays+1,).
         L: Liquid flow profile [mol/s], shape (n_trays+1,).
+        flood_fraction: Fraction of flooding velocity for each tray (0-1+), shape (n_trays,).
+        weeping: Boolean array indicating weeping condition for each tray, shape (n_trays,).
     """
 
     D: jnp.ndarray
@@ -111,6 +119,8 @@ class ColumnOutputs(NamedTuple):
     Q_C: jnp.ndarray
     V: jnp.ndarray
     L: jnp.ndarray
+    flood_fraction: jnp.ndarray
+    weeping: jnp.ndarray
 
 
 class StaticColumnParams(NamedTuple):
@@ -713,6 +723,42 @@ def column_step(
         config.controllers.Kp_level_reboiler,
     )
 
+    # Compute flooding and weeping indicators for each tray
+    def compute_flood_weep(x, T, V):
+        """Compute flooding fraction and weeping status for a tray."""
+        # Compute vapor composition for density calculation
+        y = equilibrium_vapor_composition(x, T, P, thermo)
+
+        # Densities
+        rho_L = liquid_density(x, T, thermo)
+        rho_V = vapor_density(y, T, P, thermo)
+
+        # Surface tension
+        sigma = surface_tension(x, T)
+
+        # Molecular weights for vapor
+        mw_V = mixture_molecular_weight(y, thermo)
+
+        # Net area (active area minus downcomer)
+        net_area = hydraulics.tray_area - hydraulics.downcomer_area
+
+        # Flooding velocity
+        U_nf = flooding_velocity(rho_L, rho_V, sigma, hydraulics.C_sbf)
+
+        # Flooding ratio
+        flood_frac = flooding_ratio(V, net_area, rho_V, mw_V, U_nf)
+
+        # Weeping check
+        U_min = weep_point_velocity(rho_V, hydraulics.hole_diameter, hydraulics.K2_weep)
+        weep = is_weeping(V, net_area, rho_V, mw_V, U_min)
+
+        return flood_frac, weep
+
+    # Vectorize over trays
+    flood_frac_arr, weeping_arr = jax.vmap(compute_flood_weep)(
+        tray_x_final, tray_T_final, V_out_final
+    )
+
     outputs = ColumnOutputs(
         D=condenser_outputs_final.D,
         x_D=condenser_outputs_final.x_D,
@@ -722,6 +768,8 @@ def column_step(
         Q_C=condenser_outputs_final.Q_C,
         V=V_out_final,
         L=tray_L_out_final,  # Use dynamic liquid flows
+        flood_fraction=flood_frac_arr,
+        weeping=weeping_arr,
     )
 
     return new_state, outputs

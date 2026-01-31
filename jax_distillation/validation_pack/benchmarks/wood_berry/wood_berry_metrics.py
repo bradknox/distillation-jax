@@ -309,9 +309,60 @@ def run_wood_berry_benchmark(
         and abs(jax_gains["G22"]) > 0.3 * abs(jax_gains["G21"])
     )
 
-    # NRMSE (placeholder - would need time-aligned comparison)
-    nrmse_R = 0.0  # Not computed without reference trajectory
-    nrmse_S = 0.0
+    # Compute NRMSE by comparing JAX step responses to Wood-Berry model
+    # Generate Wood-Berry reference trajectories
+    wb_R_resp = simulate_wood_berry_step_response(
+        input_var="R",
+        step_size=1.0,
+        total_time=10.0,  # 10 minutes
+        dt=0.1,  # 0.1 minute = 6 seconds
+    )
+    wb_S_resp = simulate_wood_berry_step_response(
+        input_var="S",
+        step_size=1.0,
+        total_time=10.0,
+        dt=0.1,
+    )
+
+    # Extract JAX responses normalized to unit step
+    jax_R_x_D = comparison["jax"]["R_step"]["x_D"] / comparison["jax"]["R_step"]["step_size"]
+    jax_S_x_B = comparison["jax"]["S_step"]["x_B"] / comparison["jax"]["S_step"]["step_size"]
+
+    # For NRMSE, compare trajectories at common time points
+    # JAX times are in seconds, Wood-Berry in minutes
+    jax_times_R = comparison["jax"]["R_step"]["times"]  # seconds
+    jax_times_S = comparison["jax"]["S_step"]["times"]  # seconds
+
+    def compute_nrmse(jax_response, wb_response, jax_times, wb_times):
+        """Compute NRMSE between JAX and Wood-Berry responses."""
+        from scipy.interpolate import interp1d
+
+        # Convert JAX times to minutes
+        jax_times_min = jax_times / 60.0
+
+        # Interpolate JAX response to Wood-Berry time grid
+        common_times = wb_times[wb_times <= jax_times_min[-1]]
+        if len(common_times) < 2:
+            return float('nan')
+
+        f_jax = interp1d(jax_times_min, jax_response, kind='linear', fill_value='extrapolate')
+        jax_interp = f_jax(common_times)
+
+        # Wood-Berry response at common times
+        f_wb = interp1d(wb_times, wb_response, kind='linear', fill_value='extrapolate')
+        wb_interp = f_wb(common_times)
+
+        # NRMSE
+        rmse = np.sqrt(np.mean((jax_interp - wb_interp) ** 2))
+        range_val = max(abs(wb_interp.max() - wb_interp.min()), 1e-6)
+        return rmse / range_val
+
+    nrmse_R = compute_nrmse(
+        jax_R_x_D, wb_R_resp["x_D"], jax_times_R, wb_R_resp["times"]
+    )
+    nrmse_S = compute_nrmse(
+        jax_S_x_B, wb_S_resp["x_B"], jax_times_S, wb_S_resp["times"]
+    )
 
     # Overall pass: signs correct and coupling structure reasonable
     overall = all_signs_correct and coupling_ok

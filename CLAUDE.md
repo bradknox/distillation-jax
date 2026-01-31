@@ -106,4 +106,5 @@ See phase1.md for detailed equations and parameters. Primary sources:
 - Before writing new code, search the codebase for existing implementations of the same functionality
 - When running validation tests, always check both physical consistency (mass/energy balance) and behavioral correctness (step response directions)
 - When running experiments or validations, document: (1) the context and goal, (2) detailed results, (3) discussion of what the results mean for sim-to-real transfer, and (4) recommended next steps
+- Do not overwrite or delete past plan files. Instead, copy them to a plans/ directory.
 

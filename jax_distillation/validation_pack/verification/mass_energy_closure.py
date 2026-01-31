@@ -28,6 +28,8 @@ from jax_distillation.validation.conservation import (
     compute_total_component,
     ConservationMetrics,
 )
+from jax_distillation.core.thermodynamics import liquid_enthalpy
+from jax_distillation.core.types import ThermoParams
 
 
 @dataclass
@@ -133,6 +135,33 @@ def check_component_closure(
     return absolute_error, relative_error
 
 
+def compute_column_energy(state: FullColumnState, thermo: ThermoParams) -> float:
+    """Compute total internal energy of the column.
+
+    E = sum(M_i * h_L(x_i, T_i)) for all trays + reboiler + condenser
+
+    Args:
+        state: Column state.
+        thermo: Thermodynamic parameters.
+
+    Returns:
+        Total column energy [J].
+    """
+    # Tray energies
+    tray_h = liquid_enthalpy(state.tray_x, state.tray_T, thermo)
+    tray_energy = float(jnp.sum(state.tray_M * tray_h))
+
+    # Reboiler energy
+    reb_h = liquid_enthalpy(state.reboiler.x, state.reboiler.T, thermo)
+    reb_energy = float(state.reboiler.M * reb_h)
+
+    # Condenser energy
+    cond_h = liquid_enthalpy(state.condenser.x, state.condenser.T, thermo)
+    cond_energy = float(state.condenser.M * cond_h)
+
+    return tray_energy + reb_energy + cond_energy
+
+
 def check_energy_closure(
     state_initial: FullColumnState,
     state_final: FullColumnState,
@@ -140,13 +169,11 @@ def check_energy_closure(
     cumulative_Q_C: float,
     cumulative_feed_enthalpy: float,
     cumulative_product_enthalpy: float,
+    thermo: Optional[ThermoParams] = None,
 ) -> Tuple[float, float]:
     """Check energy closure over a simulation period.
 
     Conservation: E_final - E_initial = Q_R - Q_C + H_feed - H_products
-
-    Note: This is a simplified check. Full energy balance requires
-    tracking enthalpies throughout the column.
 
     Args:
         state_initial: State at start.
@@ -155,19 +182,33 @@ def check_energy_closure(
         cumulative_Q_C: Total condenser duty [J].
         cumulative_feed_enthalpy: Total feed enthalpy [J].
         cumulative_product_enthalpy: Total product enthalpy [J].
+        thermo: Thermodynamic parameters (required for energy calculation).
 
     Returns:
         Tuple of (absolute_error [J], relative_error [fraction]).
     """
-    # Simplified: assume energy change is primarily from Q_R - Q_C
-    # A full implementation would track liquid/vapor enthalpies
-    net_heat_input = cumulative_Q_R - cumulative_Q_C
+    if thermo is None:
+        # Cannot compute without thermo params - return placeholder
+        return 0.0, 0.0
 
-    # Approximate column energy as M * cp * T (very simplified)
-    # This is a placeholder - full implementation would use proper enthalpy
+    # Compute actual energy change in the column
+    E_initial = compute_column_energy(state_initial, thermo)
+    E_final = compute_column_energy(state_final, thermo)
+    actual_change = E_final - E_initial
 
-    # For now, return a nominal value indicating energy wasn't fully tracked
-    return 0.0, 0.0  # Placeholder
+    # Expected change based on energy balance
+    # Energy in: Q_R (reboiler heat), H_feed (feed enthalpy)
+    # Energy out: Q_C (condenser heat), H_products (product enthalpies)
+    expected_change = cumulative_Q_R - cumulative_Q_C + cumulative_feed_enthalpy - cumulative_product_enthalpy
+
+    # Compute errors
+    absolute_error = abs(actual_change - expected_change)
+
+    # Normalize by total energy input (Q_R is typically dominant)
+    reference = max(abs(cumulative_Q_R), 1.0)
+    relative_error = absolute_error / reference
+
+    return absolute_error, relative_error
 
 
 def run_mass_energy_closure(
@@ -218,6 +259,10 @@ def run_mass_energy_closure(
     # Now start measurement from warmed-up state
     state_initial = state
 
+    # Get thermodynamic parameters for enthalpy calculations
+    thermo = config.thermo
+    T_feed = float(config.feed.T_feed) if hasattr(config.feed, 'T_feed') else 350.0  # K
+
     # Accumulators
     cumulative_feed = 0.0
     cumulative_distillate = 0.0
@@ -227,6 +272,8 @@ def run_mass_energy_closure(
     cumulative_bottoms_component = 0.0
     cumulative_Q_R = 0.0
     cumulative_Q_C = 0.0
+    cumulative_feed_enthalpy = 0.0
+    cumulative_product_enthalpy = 0.0
 
     trajectory = []
 
@@ -250,6 +297,18 @@ def run_mass_energy_closure(
         cumulative_bottoms_component += B * x_B * dt
         cumulative_Q_R += Q_R * dt
         cumulative_Q_C += Q_C * dt
+
+        # Accumulate enthalpies for energy balance
+        # Feed enthalpy (liquid feed at feed temperature)
+        h_feed = float(liquid_enthalpy(jnp.array(z_F), jnp.array(T_feed), thermo))
+        cumulative_feed_enthalpy += F * h_feed * dt
+
+        # Product enthalpies (liquid products at their respective temperatures)
+        T_D = float(state.condenser.T)
+        T_B = float(state.reboiler.T)
+        h_D = float(liquid_enthalpy(jnp.array(x_D), jnp.array(T_D), thermo))
+        h_B = float(liquid_enthalpy(jnp.array(x_B), jnp.array(T_B), thermo))
+        cumulative_product_enthalpy += (D * h_D + B * h_B) * dt
 
         # Record trajectory at intervals
         if (step + 1) % record_interval == 0:
@@ -290,8 +349,9 @@ def run_mass_energy_closure(
         state,
         cumulative_Q_R,
         cumulative_Q_C,
-        0.0,  # Placeholder
-        0.0,  # Placeholder
+        cumulative_feed_enthalpy,
+        cumulative_product_enthalpy,
+        thermo=thermo,
     )
 
     return MassEnergyClosureResult(
@@ -302,7 +362,7 @@ def run_mass_energy_closure(
         energy_closure=energy_closure,
         mass_passed=mass_closure < mass_tolerance,
         component_passed=component_closure < component_tolerance,
-        energy_passed=True,  # Energy not fully implemented
+        energy_passed=energy_closure < energy_tolerance,
         trajectory=trajectory,
         mass_tolerance=mass_tolerance,
         component_tolerance=component_tolerance,
@@ -333,8 +393,10 @@ def print_mass_energy_closure_report(result: MassEnergyClosureResult) -> None:
     print(f"  Error: {result.component_closure:.6f} ({result.component_closure*100:.4f}%)")
     print(f"  Tolerance: {result.component_tolerance:.6f} ({result.component_tolerance*100:.4f}%)")
 
-    print(f"\nEnergy Closure: (not fully implemented)")
-    print(f"  Status: N/A - simplified model")
+    energy_status = "PASS" if result.energy_passed else "FAIL"
+    print(f"\nEnergy Closure: {energy_status}")
+    print(f"  Error: {result.energy_closure:.6f} ({result.energy_closure*100:.4f}%)")
+    print(f"  Tolerance: {result.energy_tolerance:.6f} ({result.energy_tolerance*100:.4f}%)")
 
     if result.trajectory:
         print(f"\nTrajectory ({len(result.trajectory)} points):")
@@ -343,7 +405,7 @@ def print_mass_energy_closure_report(result: MassEnergyClosureResult) -> None:
             print(f"  {t:8.1f}    {m_err:.6f}    {c_err:.6f}")
 
     print("\n" + "=" * 70)
-    overall = "PASS" if (result.mass_passed and result.component_passed) else "FAIL"
+    overall = "PASS" if (result.mass_passed and result.component_passed and result.energy_passed) else "FAIL"
     print(f"OVERALL: {overall}")
     print("=" * 70)
 
