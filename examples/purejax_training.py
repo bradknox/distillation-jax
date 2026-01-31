@@ -474,9 +474,10 @@ def benchmark_throughput(env: DistillationEnvJax, n_envs_list: list = [1, 8, 32,
         base_key = jax.random.PRNGKey(1)
         _ = run_steps(states, base_key)
 
-        # Benchmark
+        # Benchmark (block_until_ready ensures we measure actual compute time)
         start = time.time()
-        _ = run_steps(states, base_key)
+        final_states = run_steps(states, base_key)
+        final_states.column_state.tray_T.block_until_ready()
         elapsed = time.time() - start
 
         total_steps = n_envs * n_steps
