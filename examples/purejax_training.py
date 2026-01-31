@@ -313,10 +313,10 @@ def train_ppo(
     _, env_states = reset_fn(reset_keys, env_params)
 
     # Vectorized rollout collection
-    collect_fn = jax.vmap(
-        partial(collect_rollout, env=env, env_params=env_params, n_steps=n_steps),
-        in_axes=(0, None, 0),
-    )
+    def collect_single(key, params, env_state):
+        return collect_rollout(key, params, env, env_state, env_params, n_steps)
+
+    collect_fn = jax.vmap(collect_single, in_axes=(0, None, 0))
 
     # JIT compile training step
     @jax.jit
@@ -458,24 +458,25 @@ def benchmark_throughput(env: DistillationEnvJax, n_envs_list: list = [1, 8, 32,
         step_fn = jax.vmap(env.step, in_axes=(0, 0, 0, None))
 
         @jax.jit
-        def run_steps(states, keys):
+        def run_steps(states, base_key):
             def body(carry, _):
-                states, keys = carry
-                keys = jax.random.split(keys[0], n_envs + 1)
-                step_keys, new_key = keys[:-1], keys[-1:]
+                states, key = carry
+                # Split key for this step and next iteration
+                key, subkey = jax.random.split(key)
+                step_keys = jax.random.split(subkey, n_envs)
                 _, new_states, _, _, _ = step_fn(step_keys, states, actions, env_params)
-                return (new_states, new_key), None
+                return (new_states, key), None
 
-            (final_states, _), _ = jax.lax.scan(body, (states, keys), None, length=n_steps)
+            (final_states, _), _ = jax.lax.scan(body, (states, base_key), None, length=n_steps)
             return final_states
 
         # Warmup
-        keys = jax.random.split(jax.random.PRNGKey(1), n_envs)
-        _ = run_steps(states, keys)
+        base_key = jax.random.PRNGKey(1)
+        _ = run_steps(states, base_key)
 
         # Benchmark
         start = time.time()
-        _ = run_steps(states, keys)
+        _ = run_steps(states, base_key)
         elapsed = time.time() - start
 
         total_steps = n_envs * n_steps
@@ -508,7 +509,7 @@ def main():
         env,
         n_envs=64,
         n_steps=128,
-        n_updates=100,
+        n_updates=20,  # Reduced for demo; increase for better training
         lr=3e-4,
     )
 
