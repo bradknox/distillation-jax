@@ -10,11 +10,13 @@ import jax.numpy as jnp
 import numpy as np
 from typing import NamedTuple
 
+import jax
 from jax_distillation.column.column import (
     FullColumnState,
     ColumnAction,
     ColumnOutputs,
     column_step,
+    make_column_step_fn,
     create_initial_column_state,
     create_default_action,
 )
@@ -66,12 +68,15 @@ def run_step_response(
     Returns:
         Tuple of (states, outputs_before, outputs_after).
     """
+    # Create JIT-compiled step function
+    step_fn = jax.jit(make_column_step_fn(config))
+
     # Warmup to initial steady state
     state = create_initial_column_state(config)
     outputs_before = []
 
     for _ in range(warmup_steps):
-        state, outputs = column_step(state, action_before, config)
+        state, outputs = step_fn(state, action_before)
         outputs_before.append(outputs)
 
     # Apply step and record response
@@ -79,7 +84,7 @@ def run_step_response(
     outputs_after = []
 
     for _ in range(response_steps):
-        state, outputs = column_step(state, action_after, config)
+        state, outputs = step_fn(state, action_after)
         states.append(state)
         outputs_after.append(outputs)
 

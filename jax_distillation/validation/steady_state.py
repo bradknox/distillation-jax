@@ -4,6 +4,7 @@ This module provides tools to validate that the column reaches
 expected steady state conditions and matches analytical predictions.
 """
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 from typing import NamedTuple
@@ -13,6 +14,7 @@ from jax_distillation.column.column import (
     ColumnAction,
     ColumnOutputs,
     column_step,
+    make_column_step_fn,
     create_initial_column_state,
     create_default_action,
 )
@@ -110,12 +112,15 @@ def run_to_steady_state(
     Returns:
         Tuple of (final_state, final_outputs, steps_taken, reached_steady).
     """
+    # Create JIT-compiled step function
+    step_fn = jax.jit(make_column_step_fn(config))
+
     state = create_initial_column_state(config)
     reached_steady = False
 
     for step in range(max_steps):
         state_old = state
-        state, outputs = column_step(state, action, config)
+        state, outputs = step_fn(state, action)
 
         if step > 0 and step % check_interval == 0:
             metrics = check_steady_state(
