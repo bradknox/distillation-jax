@@ -117,3 +117,8 @@ data/
 
 # Claude Code local settings
 .claude/
+
+# Internal development files (kept locally, not in repo)
+CLAUDE.md
+project_plan.md
+plans/
