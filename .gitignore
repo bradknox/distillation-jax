@@ -60,10 +60,10 @@ ipython_config.py
 # pyenv
 .python-version
 
-# Environments
+# Environments (virtual envs, not jax_distillation/env/)
 .env
 .venv
-env/
+/env/
 venv/
 ENV/
 env.bak/
