@@ -2,11 +2,11 @@
 
 ## Overview
 
-This document provides essential information for handoff to the RL Engineer and ChemE Expert teams. The JAX distillation simulator provides a JIT-compilable, vectorizable implementation of a binary distillation column suitable for reinforcement learning research.
+This document provides guidance for two audiences: RL practitioners interested in using the simulator for training, and chemical engineers who need to understand the physical model. The JAX distillation simulator provides a JIT-compilable, vectorizable implementation of a binary distillation column suitable for reinforcement learning research.
 
 ---
 
-## For RL Engineer
+## For RL Practitioners
 
 ### Using DistillationEnvJax with vmap for Parallel Training
 
@@ -102,7 +102,7 @@ When using `column_step()` directly, the `ColumnOutputs` namedtuple includes:
 
 ---
 
-## For ChemE Expert
+## For Chemical Engineers
 
 ### Model Assumptions and Limitations
 
@@ -178,7 +178,7 @@ See `artifacts/credibility_report.md` for the full credibility assessment.
 
 ---
 
-## For Both Teams
+## For All Users
 
 ### How to Run Validation Suite
 
