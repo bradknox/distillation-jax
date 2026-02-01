@@ -43,7 +43,7 @@ def generate_synthetic_data(
         column_step,
         ColumnAction,
     )
-    from jax_distillation.column.config import create_default_config
+    from jax_distillation.column.config import create_teaching_column_config as create_default_config
     import jax.numpy as jnp
 
     np.random.seed(seed)
@@ -112,7 +112,7 @@ def create_simulator_wrapper():
         column_step,
         ColumnAction,
     )
-    from jax_distillation.column.config import create_default_config
+    from jax_distillation.column.config import create_teaching_column_config as create_default_config
     import jax.numpy as jnp
 
     config = create_default_config()

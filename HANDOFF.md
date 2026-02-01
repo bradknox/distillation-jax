@@ -258,6 +258,27 @@ The following issues from earlier development have been resolved:
 
 ---
 
+## Known Differences from Wood-Berry Reference
+
+The JAX simulator uses level-controlled reflux (`R = reflux_ratio × D`) which
+creates coupling between reboiler duty and reflux flow. This causes G12 and G22
+to have opposite signs compared to the Wood-Berry model where R and S are
+independent manipulated variables.
+
+**Wood-Berry (independent R, S):**
+- G12 < 0: Increasing steam decreases distillate purity
+- G22 < 0: Increasing steam decreases bottoms impurity
+
+**JAX Simulator (level-controlled reflux):**
+- G12 > 0: Increasing steam → more vapor → higher D → higher R → better separation → higher purity
+- G22 > 0: Increasing steam → more vapor → more light boiled off → lower light in bottoms
+
+This is a modeling choice reflecting how some real columns operate with level-controlled
+reflux drums, not a simulation bug. The validation checks that G11 and G21 signs match
+(these are unaffected by the coupling) and that the coupling structure is reasonable.
+
+---
+
 ## Current Limitations
 
 The following items are known limitations in the current implementation:

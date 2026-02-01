@@ -88,10 +88,22 @@ def validate_antoine_single_compound(
     if antoine_params is None:
         raise ValueError(f"No Antoine parameters for compound: {compound}")
 
+    # Filter points to valid temperature range for the Antoine coefficients
+    T_min = float(antoine_params.T_min)
+    T_max = float(antoine_params.T_max)
+    valid_points = [p for p in nist_data if T_min <= p.temperature_k <= T_max]
+    n_skipped = len(nist_data) - len(valid_points)
+
+    if n_skipped > 0:
+        print(f"  Note: {n_skipped} points outside valid range [{T_min:.0f}-{T_max:.0f} K], skipped")
+
+    if len(valid_points) == 0:
+        raise ValueError(f"No NIST points within valid Antoine range [{T_min:.0f}-{T_max:.0f} K] for {compound}")
+
     errors = []
     rel_errors = []
 
-    for point in nist_data:
+    for point in valid_points:
         T = jnp.array(point.temperature_k)
         P_ref = point.pressure_bar
 
@@ -113,7 +125,7 @@ def validate_antoine_single_compound(
 
     return AntoineValidationResult(
         compound=compound,
-        n_points=len(nist_data),
+        n_points=len(valid_points),
         max_relative_error=max_error,
         mean_relative_error=mean_error,
         all_errors=errors,

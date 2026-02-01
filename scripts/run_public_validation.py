@@ -79,7 +79,7 @@ def run_verification(n_steps: int = 1000, verbose: bool = False):
         create_default_action,
         column_step,
     )
-    from jax_distillation.column.config import create_default_config
+    from jax_distillation.column.config import create_teaching_column_config as create_default_config
 
     results = {}
 
