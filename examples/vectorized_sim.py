@@ -210,8 +210,8 @@ def main():
         axes[1].grid(True)
 
         plt.tight_layout()
-        plt.savefig("vectorized_results.png", dpi=150)
-        print("\nPlot saved to: vectorized_results.png")
+        plt.savefig("artifacts/plots/vectorized_results.png", dpi=150)
+        print("\nPlot saved to: artifacts/plots/vectorized_results.png")
         plt.show()
 
     except Exception as e:

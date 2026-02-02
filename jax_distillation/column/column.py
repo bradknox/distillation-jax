@@ -385,6 +385,10 @@ def column_step(
 ) -> tuple[FullColumnState, ColumnOutputs]:
     """Perform one timestep of the complete column simulation.
 
+    WARNING: Do NOT call this function in a Python for/while loop!
+    That causes massive overhead. Use simulate_column() or simulate_column_jit()
+    instead, which use jax.lax.scan for efficient batched execution.
+
     Args:
         state: Current column state.
         action: Control actions.

@@ -153,8 +153,8 @@ def main():
         axes[1, 1].grid(True)
 
         plt.tight_layout()
-        plt.savefig("simulation_results.png", dpi=150)
-        print("\nPlot saved to: simulation_results.png")
+        plt.savefig("artifacts/plots/simulation_results.png", dpi=150)
+        print("\nPlot saved to: artifacts/plots/simulation_results.png")
         plt.show()
 
     except Exception as e:

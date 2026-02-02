@@ -177,8 +177,8 @@ def main():
         axes[1, 1].grid(True)
 
         plt.tight_layout()
-        plt.savefig("step_response.png", dpi=150)
-        print("\nPlot saved to: step_response.png")
+        plt.savefig("artifacts/plots/step_response.png", dpi=150)
+        print("\nPlot saved to: artifacts/plots/step_response.png")
         plt.show()
 
     except Exception as e:
