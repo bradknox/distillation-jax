@@ -33,17 +33,17 @@ Implement a high-fidelity, JAX-native distillation column simulator for RL resea
   - Include parameters for: methanol, water, ethanol, benzene, toluene
   - Add temperature range validation/clamping
 - [x] Implement NRTL activity coefficient model (binary)
-  - tau_12, tau_21 with temperature dependence
-  - G_12, G_21 calculations
-  - ln(gamma_1), ln(gamma_2) equations
-  - Default params for methanol-water (α=0.1)
+  - $\tau_{12}$, $\tau_{21}$ with temperature dependence
+  - $G_{12}$, $G_{21}$ calculations
+  - $\ln(\gamma_1)$, $\ln(\gamma_2)$ equations
+  - Default params for methanol-water ($\alpha=0.1$)
 - [x] Implement ideal Raoult's Law as baseline option
-- [x] Implement K-value calculation: K_k = gamma_k * P_k^sat / P
-- [x] Implement equilibrium vapor composition: y* = K1*x / (K1*x + K2*(1-x))
+- [x] Implement K-value calculation: $K_k = \gamma_k \cdot P_k^{sat} / P$
+- [x] Implement equilibrium vapor composition: $y^* = K_1 x / (K_1 x + K_2(1-x))$
 - [x] Implement bubble point solver (bracketing + Newton)
 - [x] Implement enthalpy models:
-  - Liquid enthalpy: h_L(x,T)
-  - Vapor enthalpy: h_V(y,T) with heat of vaporization
+  - Liquid enthalpy: $h_L(x,T)$
+  - Vapor enthalpy: $h_V(y,T)$ with heat of vaporization
 - [x] Write `tests/test_thermodynamics.py`:
   - Antoine matches NIST values
   - Bubble point converges for known mixtures
@@ -53,15 +53,15 @@ Implement a high-fidelity, JAX-native distillation column simulator for RL resea
 ### Stage 2: Hydraulics Module (`core/hydraulics.py`) ✅
 
 - [x] Implement Francis weir formula for liquid outflow
-  - Q_L = C_w * L_w * h_ow^(3/2)
-  - Molar conversion: L = Q_L * rho_L / MW
+  - $Q_L = C_w \cdot L_w \cdot h_{ow}^{3/2}$
+  - Molar conversion: $L = Q_L \cdot \rho_L / MW$
 - [x] Implement hydraulic coupling dynamics
-  - dL_out = (1/tau_L) * dM + j * dV_in
-  - Parameters: tau_L (0.5-15s), j (-5 to +5)
+  - $dL_{out} = (1/\tau_L) \cdot dM + j \cdot dV_{in}$
+  - Parameters: $\tau_L$ (0.5-15s), $j$ (-5 to +5)
 - [x] Implement flooding correlation (Fair)
-  - U_n,f = C_sbf * (sigma/20)^0.2 * ((rho_L - rho_V)/rho_V)^0.5
+  - $U_{n,f} = C_{sbf} \cdot (\sigma/20)^{0.2} \cdot ((\rho_L - \rho_V)/\rho_V)^{0.5}$
 - [x] Implement weeping constraint
-  - U_min = (K2 - 0.9*(25.4 - d_h)) / sqrt(rho_V)
+  - $U_{min} = (K_2 - 0.9(25.4 - d_h)) / \sqrt{\rho_V}$
 - [x] Implement liquid/vapor density calculations
 - [x] Write `tests/test_hydraulics.py`:
   - Francis weir matches textbook examples
@@ -70,10 +70,10 @@ Implement a high-fidelity, JAX-native distillation column simulator for RL resea
 
 ### Stage 3: Single Tray Dynamics (`column/tray.py`) ✅
 
-- [x] Implement total material balance: dM/dt = L_in + V_in - L_out - V_out (+ feed if applicable)
-- [x] Implement component balance: d(M*x)/dt equation with feed handling
-- [x] Implement Murphree vapor efficiency: y = y_in + E_M*(y* - y_in)
-- [x] Implement energy balance: dU/dt with enthalpy flows
+- [x] Implement total material balance: $dM/dt = L_{in} + V_{in} - L_{out} - V_{out}$ (+ feed if applicable)
+- [x] Implement component balance: $d(Mx)/dt$ equation with feed handling
+- [x] Implement Murphree vapor efficiency: $y = y_{in} + E_M(y^* - y_{in})$
+- [x] Implement energy balance: $dU/dt$ with enthalpy flows
 - [x] Create `tray_step(tray_state, inflows, params, dt)` function
 - [x] Write `tests/test_tray.py`:
   - Mass conservation
@@ -84,12 +84,12 @@ Implement a high-fidelity, JAX-native distillation column simulator for RL resea
 ### Stage 4: Reboiler and Condenser ✅
 
 - [x] Implement reboiler model (`column/reboiler.py`):
-  - Holdup dynamics: dM_B/dt = L_N - (V_{N+1} + B)
+  - Holdup dynamics: $dM_B/dt = L_N - (V_{N+1} + B)$
   - Component balance with equilibrium vapor
-  - Energy balance with Q_R input
+  - Energy balance with $Q_R$ input
 - [x] Implement condenser model (`column/condenser.py`):
   - Total condenser assumption
-  - Reflux drum dynamics: dM_D/dt = V_1 - (R + D)
+  - Reflux drum dynamics: $dM_D/dt = V_1 - (R + D)$
   - Component and energy balance
 - [x] Implement level control (PI controllers for drum/sump)
 - [x] Write `tests/test_reboiler.py` and condenser tests:
@@ -192,8 +192,8 @@ Implement a high-fidelity, JAX-native distillation column simulator for RL resea
 - All core functions must be JIT-compilable (no Python side effects) ✅
 - Use chex.dataclass for all state representations ✅
 - Fixed-step RK4 for determinism ✅
-- dt_int <= 0.1 * tau_L for numerical stability ✅
-- Default mixture: methanol-water with NRTL (α=0.1) ✅
+- $dt_{int} \le 0.1 \cdot \tau_L$ for numerical stability ✅
+- Default mixture: methanol-water with NRTL ($\alpha=0.1$) ✅
 
 ---
 
