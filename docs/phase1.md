@@ -61,10 +61,10 @@ Number trays from top to bottom: tray 1 is top tray below the condenser, tray N 
 * Thus vapor entering tray *i* from below is $V_{i+1}$ with composition $y_{i+1}$.
 * Liquid entering tray *i* from above is $L_{i-1}$ with composition $x_{i-1}$.
 
-Let the feed enter tray *f* at total molar rate $F$ [mol/s], overall light fraction $z_F$, and **quality** $q\in[0,1]$ (fraction of feed that enters as liquid). Then:
+Let the feed enter tray *f* at total molar rate (F) [mol/s], overall light fraction $z_F$, and **quality** $q\in[0,1]$ (fraction of feed that enters as liquid). Then:
 
 * Liquid feed part: $F_L = qF$ enters liquid phase
-* Vapor feed part: $F_V = (1-q)F$ enters vapor phase
+* Vapor feed part: (F_V = (1-q)F) enters vapor phase
 
 (If you want higher fidelity, compute q from feed enthalpy via a flash; but quality is a workable parameter.)
 
@@ -75,7 +75,7 @@ Let the feed enter tray *f* at total molar rate $F$ [mol/s], overall light fract
 For i = 1…N, with feed only if i = f:
 
 \[
-\frac{dM_i}{dt} = L_{i-1} + \mathbb{1}*{i=f}F_L + V*{i+1} + \mathbb{1}_{i=f}F_V - L_i - V_i
+\frac{dM_i}{dt} = L_{i-1} + \mathbb{1}_{i=f}F_L + V_{i+1} + \mathbb{1}_{i=f}F_V - L_i - V_i
 \tag{1}
 \]
 
@@ -86,7 +86,7 @@ If you assume vapor holdup is negligible (common in many control-oriented models
 #### 1.2.2 Component material balance (light component) on tray i (Equation 2)
 
 \[
-\frac{d(M_i x_i)}{dt} = L_{i-1}x_{i-1} + \mathbb{1}*{i=f}F_L z_F + V*{i+1}y_{i+1} + \mathbb{1}_{i=f}F_V z_F - L_i x_i - V_i y_i
+\frac{d(M_i x_i)}{dt} = L_{i-1}x_{i-1} + \mathbb{1}_{i=f}F_L z_F + V_{i+1}y_{i+1} + \mathbb{1}_{i=f}F_V z_F - L_i x_i - V_i y_i
 \tag{2}
 \]
 
@@ -115,13 +115,13 @@ L_{i-1} h_L(x_{i-1},T_{i-1})
 
 Where:
 
-* $h_L(x,T)$ is **molar liquid enthalpy** [J/mol]
-* $h_V(y,T)$ is **molar vapor enthalpy** [J/mol]
+* (h_L(x,T)) is **molar liquid enthalpy** [J/mol]
+* (h_V(y,T)) is **molar vapor enthalpy** [J/mol]
 * $Q_i$ is external heat to tray i [W]; typically $Q_i=0$ for trays (heat losses handled separately if desired)
 
 **Implementation note:** you can either:
 
-1. integrate $U_i$ and solve for $T_i$ each step via an "energy inversion" (e.g., Newton solve on $U_i - U(x_i,T_i)=0$), or
+1. integrate $U_i$ and solve for $T_i$ each step via an “energy inversion” (e.g., Newton solve on (U_i - U$x_i,T_i$=0)), or
 2. integrate $T_i$ directly using an effective heat capacity model (simpler numerically, but be consistent).
 
 Wittgens’ rigorous stage model uses internal energy states and equilibrium flash assumptions. ([Sigurd Skogestad][1])
@@ -152,7 +152,7 @@ y_1^{*} = \frac{K_1 x}{K_1 x + K_2(1-x)}
 
 #### 1.2.5 Murphree vapor efficiency (recommended non-equilibrium correction) (Equation 6)
 
-Real trays are not perfectly equilibrated. A widely used, calibratable correction is **Murphree vapor efficiency** $E_{M,i}\in(0,1]$. Define vapor entering tray i from below as $y_{in}=y_{i+1}$. Then:
+Real trays are not perfectly equilibrated. A widely used, calibratable correction is **Murphree vapor efficiency** (E_{M,i}\in(0,1]). Define vapor entering tray i from below as $y_{in}=y_{i+1}$. Then:
 
 \[
 y_i = y_{in} + E_{M,i}\bigl(y_i^{*} - y_{in}\bigr)
@@ -696,30 +696,30 @@ For tray i = 1…N:
 
 1. Total holdup:
    \[
-   \frac{dM_i}{dt} = L_{i-1} + \mathbb{1}*{i=f}qF + V*{i+1} + \mathbb{1}_{i=f}(1-q)F - L_i - V_i
+   \frac{dM_i}{dt} = L_{i-1} + \mathbb{1}_{i=f}qF + V_{i+1} + \mathbb{1}_{i=f}(1-q)F - L_i - V_i
    \]
 
 2. Light component:
    \[
-   \frac{d$M_i x_i$}{dt} = L_{i-1}x_{i-1} + \mathbb{1}*{i=f}qF z_F + V*{i+1}y_{i+1} + \mathbb{1}_{i=f}(1-q)F z_F - L_i x_i - V_i y_i
+   \frac{d(M_i x_i)}{dt} = L_{i-1}x_{i-1} + \mathbb{1}_{i=f}qF z_F + V_{i+1}y_{i+1} + \mathbb{1}_{i=f}(1-q)F z_F - L_i x_i - V_i y_i
    \]
 
 3. Energy:
    \[
    \frac{dU_i}{dt} =
-   L_{i-1} h_L$x_{i-1},T_{i-1}$
+   L_{i-1} h_L(x_{i-1},T_{i-1})
 
 * \mathbb{1}_{i=f}qF h_F^{(L)}
-* V_{i+1} h_V$y_{i+1},T_{i+1}$
+* V_{i+1} h_V(y_{i+1},T_{i+1})
 * \mathbb{1}_{i=f}(1-q)F h_F^{(V)}
 
-- L_i h_L$x_i,T_i$
-- V_i h_V$y_i,T_i$
+- L_i h_L(x_i,T_i)
+- V_i h_V(y_i,T_i)
   \]
 
 4. Vapor pressure (Antoine):
    \[
-   \log_{10}!\bigl$P_k^{sat}[\mathrm{bar}]\bigr$= A_k - \frac{B_k}{T[\mathrm{K}] + C_k}
+   \log_{10}!\bigl(P_k^{sat}[\mathrm{bar}]\bigr)= A_k - \frac{B_k}{T[\mathrm{K}] + C_k}
    \]
 
 5. NRTL:
@@ -728,7 +728,7 @@ For tray i = 1…N:
    G_{12}=e^{-\alpha\tau_{12}},\quad G_{21}=e^{-\alpha\tau_{21}}
    \]
    \[
-   $\ln\gamma_1,\ln\gamma_2$\ \text{from Eqs. (10–11)}
+   (\ln\gamma_1,\ln\gamma_2)\ \text{from Eqs. (10–11)}
    \]
 
 6. K-values:
@@ -743,7 +743,7 @@ For tray i = 1…N:
 
 8. Murphree efficiency:
    \[
-   y_i = y_{i+1} + E_{M,i}$y_i^{*}-y_{i+1}$
+   y_i = y_{i+1} + E_{M,i}(y_i^{*}-y_{i+1})
    \]
 
 9. Hydraulic coupling (recommended):
