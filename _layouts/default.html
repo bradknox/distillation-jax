@@ -6,17 +6,21 @@
   <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
   <meta name="description" content="{{ page.description | default: site.description }}">
 
-  <!-- GitHub Pages default theme styling -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
+  <!-- GitHub dark theme styling -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
 
   <style>
+    html, body {
+      background-color: #0d1117;
+      color: #e6edf3;
+    }
+
     body {
       box-sizing: border-box;
       min-width: 200px;
       max-width: 980px;
       margin: 0 auto;
       padding: 45px;
-      background-color: #fff;
     }
 
     .markdown-body {
@@ -24,6 +28,7 @@
       min-width: 200px;
       max-width: 980px;
       margin: 0 auto;
+      background-color: #0d1117;
     }
 
     @media (max-width: 767px) {
@@ -36,20 +41,24 @@
     nav {
       margin-bottom: 2rem;
       padding-bottom: 1rem;
-      border-bottom: 1px solid #eaecef;
+      border-bottom: 1px solid #30363d;
     }
 
     nav a {
       margin-right: 1rem;
       text-decoration: none;
-      color: #0366d6;
+      color: #58a6ff;
     }
 
     nav a:hover {
       text-decoration: underline;
     }
 
-    /* MathJax display math centering */
+    /* MathJax styling for dark theme */
+    mjx-container {
+      color: #e6edf3;
+    }
+
     mjx-container[display="true"] {
       display: block;
       text-align: center;
@@ -82,7 +91,7 @@
 <body>
   <article class="markdown-body">
     <nav>
-      <a href="{{ site.baseurl }}/">Home</a>
+      <a href="{{ site.baseurl }}/">Overview</a>
       <a href="{{ site.baseurl }}/docs/phase1">Research Foundation</a>
       <a href="{{ site.baseurl }}/docs/implementation_plan">Implementation Plan</a>
       <a href="{{ site.baseurl }}/HANDOFF">Handoff</a>

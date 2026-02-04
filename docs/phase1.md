@@ -74,10 +74,10 @@ Let the feed enter tray *f* at total molar rate (F) [mol/s], overall light fract
 
 For i = 1…N, with feed only if i = f:
 
-[
+\[
 \frac{dM_i}{dt} = L_{i-1} + \mathbb{1}*{i=f}F_L + V*{i+1} + \mathbb{1}_{i=f}F_V - L_i - V_i
 \tag{1}
-]
+\]
 
 If you assume vapor holdup is negligible (common in many control-oriented models), then (M_i) is liquid holdup only and Eq. (1) simplifies by dropping vapor holdup dynamics but retaining vapor flow terms as throughputs. (Wittgens & Skogestad discuss both rigorous holdup accounting and simplified forms.) ([Sigurd Skogestad][1])
 
@@ -85,10 +85,10 @@ If you assume vapor holdup is negligible (common in many control-oriented models
 
 #### 1.2.2 Component material balance (light component) on tray i (Equation 2)
 
-[
+\[
 \frac{d(M_i x_i)}{dt} = L_{i-1}x_{i-1} + \mathbb{1}*{i=f}F_L z_F + V*{i+1}y_{i+1} + \mathbb{1}_{i=f}F_V z_F - L_i x_i - V_i y_i
 \tag{2}
-]
+\]
 
 This is the core composition propagation equation used for dynamic tray models. ([Sigurd Skogestad][1])
 
@@ -98,7 +98,7 @@ This is the core composition propagation equation used for dynamic tray models. 
 
 A rigorous formulation uses internal energy as the differential state. Wittgens & Skogestad write tray energy balances in terms of internal energy with inlet/outlet enthalpy flows. ([Sigurd Skogestad][1]) A practical implementable form is:
 
-[
+\[
 \frac{dU_i}{dt} =
 L_{i-1} h_L(x_{i-1},T_{i-1})
 
@@ -132,21 +132,21 @@ Wittgens’ rigorous stage model uses internal energy states and equilibrium fla
 
 For each tray, compute equilibrium K-values:
 
-[
+\[
 K_k = \frac{\gamma_k(x,T) , P_k^{sat}(T)}{P}
 \quad\text{for }k\in{1,2}
 \tag{4}
-]
+\]
 
 Assuming ideal vapor phase (often acceptable for low pressures; refine later if needed).
 
 For a binary mixture, vapor composition in equilibrium with liquid is:
 
-[
+\[
 y_1^{*} = \frac{K_1 x}{K_1 x + K_2(1-x)}
 ,\qquad y_2^{*}=1-y_1^{*}
 \tag{5}
-]
+\]
 
 ---
 
@@ -154,10 +154,10 @@ y_1^{*} = \frac{K_1 x}{K_1 x + K_2(1-x)}
 
 Real trays are not perfectly equilibrated. A widely used, calibratable correction is **Murphree vapor efficiency** (E_{M,i}\in(0,1]). Define vapor entering tray i from below as (y_{in}=y_{i+1}). Then:
 
-[
+\[
 y_i = y_{in} + E_{M,i}\bigl(y_i^{*} - y_{in}\bigr)
 \tag{6}
-]
+\]
 
 This is attractive for sim-to-real because (E_{M,i}) is **identifiable from data** (e.g., from steady-state composition/temperature profiles and known reflux/boilup conditions) and can be randomized across plausible ranges.
 
@@ -167,10 +167,10 @@ This is attractive for sim-to-real because (E_{M,i}) is **identifiable from data
 
 Binary summations are enforced implicitly:
 
-[
+\[
 x_2 = 1-x_1,\qquad y_2 = 1-y_1
 \tag{7}
-]
+\]
 
 ---
 
@@ -180,10 +180,10 @@ x_2 = 1-x_1,\qquad y_2 = 1-y_1
 
 Use the NIST Antoine form (as presented on NIST Chemistry WebBook pages):
 
-[
+\[
 \log_{10}!\bigl(P^{sat}[\mathrm{bar}]\bigr)= A - \frac{B}{T[\mathrm{K}] + C}
 \tag{8}
-]
+\]
 
 **Default component Antoine parameters (examples commonly used in teaching/lab columns):**
 
@@ -209,21 +209,21 @@ Use the NIST Antoine form (as presented on NIST Chemistry WebBook pages):
 
 Let (\tau_{12}, \tau_{21}) be dimensionless interaction parameters and (\alpha) be the non-randomness parameter (commonly 0.1–0.3; IUPAC example uses 0.1). Define:
 
-[
+\[
 G_{12}=\exp(-\alpha \tau_{12}),\qquad G_{21}=\exp(-\alpha \tau_{21})
 \tag{9}
-]
+\]
 
 For a binary mixture, the activity coefficients are:
 
-[
+\[
 \ln \gamma_1 = x_2^2\left[\tau_{21}\left(\frac{G_{21}}{x_1 + x_2 G_{21}}\right)^2
 
 * \tau_{12}\frac{G_{12}}{(x_2 + x_1 G_{12})^2}\right]
   \tag{10}
   ]
 
-[
+\[
 \ln \gamma_2 = x_1^2\left[\tau_{12}\left(\frac{G_{12}}{x_2 + x_1 G_{12}}\right)^2
 
 * \tau_{21}\frac{G_{21}}{(x_1 + x_2 G_{21})^2}\right]
@@ -234,11 +234,11 @@ For a binary mixture, the activity coefficients are:
 
 **Temperature dependence:** a practical common form is:
 
-[
+\[
 \tau_{12}(T)=A_{12}+\frac{B_{12}}{T},\qquad
 \tau_{21}(T)=A_{21}+\frac{B_{21}}{T}
 \tag{12}
-]
+\]
 
 ---
 
@@ -260,17 +260,17 @@ Armfield’s UOP3 teaching column explicitly lists **methanol–water** among st
 
 Relative volatility between light (1) and heavy (2):
 
-[
+\[
 \alpha_{rel} = \frac{K_1}{K_2}
 \tag{13}
-]
+\]
 
 In simplified teaching models, (\alpha_{rel}) is sometimes treated as constant, yielding:
 
-[
+\[
 y_1^{*}=\frac{\alpha_{rel} x}{1 + (\alpha_{rel}-1)x}
 \tag{14}
-]
+\]
 
 **Recommendation for your project:** do **not** use constant relative volatility as the main model if you want sim-to-real; keep it only as a debugging/benchmark mode.
 
@@ -282,10 +282,10 @@ You will often need tray temperature consistent with composition at pressure.
 
 **Bubble-point condition (Equation 15):**
 
-[
+\[
 P = x_1\gamma_1(x,T)P_1^{sat}(T) + x_2\gamma_2(x,T)P_2^{sat}(T)
 \tag{15}
-]
+\]
 
 **Algorithm (robust bracketing + Newton):**
 
@@ -302,17 +302,17 @@ This approach is stable in JAX (pure functional; no side effects) and avoids div
 A pragmatic starting point (that supports energy balances and is calibratable) is:
 
 Liquid enthalpy:
-[
+\[
 h_L(x,T)= x,c_{p,L,1}(T-T_{ref}) + (1-x),c_{p,L,2}(T-T_{ref})
 \tag{16}
-]
+\]
 
 Vapor enthalpy:
-[
+\[
 h_V(y,T)= y\left[\Delta h_{vap,1} + c_{p,V,1}(T-T_{ref})\right]
 +(1-y)\left[\Delta h_{vap,2} + c_{p,V,2}(T-T_{ref})\right]
 \tag{17}
-]
+\]
 
 Where:
 
@@ -340,10 +340,10 @@ Wittgens & Skogestad explicitly argue that simplified models that neglect hydrau
 
 A widely used approximation is:
 
-[
+\[
 dL_{out} = \frac{1}{\tau_L} dM + j, dV_{in}
 \tag{18}
-]
+\]
 
 Where:
 
@@ -385,11 +385,11 @@ If you want to avoid “deriving” (h_{ow}) from geometry at first, you can par
 
 NPTEL gives Fair’s correlation for flooding gas velocity through net area: ([NPTEL][8])
 
-[
+\[
 U_{n,f} = C_{sbf}\left(\frac{\sigma}{20}\right)^{0.2}
 \left(\frac{\rho_L-\rho_V}{\rho_V}\right)^{0.5}
 \tag{21}
-]
+\]
 
 Where:
 
@@ -406,10 +406,10 @@ Design guidance: operate at ~80–85% of flooding for non-foaming liquids. ([NPT
 
 NPTEL provides a weeping criterion via a minimum vapor velocity at the weep point: ([NPTEL][8])
 
-[
+\[
 U_{min} = \frac{K_2 - 0.9(25.4 - d_h)}{\sqrt{\rho_V}}
 \tag{22}
-]
+\]
 
 Where:
 
@@ -441,22 +441,22 @@ Model a **total condenser**: all incoming vapor condenses to liquid in the drum.
 Let vapor from tray 1 enter condenser at (V_1, y_1). Then condensed liquid composition is approximately (x_D \approx y_1) (for total condensation).
 
 Reflux drum holdup dynamics:
-[
+\[
 \frac{dM_D}{dt} = V_1 - (R + D)
 \tag{23}
-]
+\]
 
 Component balance:
-[
+\[
 \frac{d(M_D x_D)}{dt} = V_1 y_1 - (R + D)x_D
 \tag{24}
-]
+\]
 
 Energy balance:
-[
+\[
 \frac{dU_D}{dt} = V_1 h_V(y_1,T_1) - (R+D)h_L(x_D,T_D) - Q_C
 \tag{25}
-]
+\]
 
 Where (Q_C) [W] is condenser duty (heat removed). Often you will specify condenser outlet temperature or pressure and solve for required (Q_C); for RL, (Q_C) is usually not a manipulated variable.
 
@@ -465,22 +465,22 @@ Reflux to tray 1: (L_0 = R), composition (x_0=x_D), temperature (T_0=T_D).
 #### 1.5.2 Reboiler (kettle type)
 
 Reboiler holdup dynamics:
-[
+\[
 \frac{dM_B}{dt} = L_N - (V_{N+1} + B)
 \tag{26}
-]
+\]
 
 Component balance:
-[
+\[
 \frac{d(M_B x_B)}{dt} = L_N x_N - V_{N+1} y_B - B x_B
 \tag{27}
-]
+\]
 
 Energy balance:
-[
+\[
 \frac{dU_B}{dt} = L_N h_L(x_N,T_N) - V_{N+1}h_V(y_B,T_B) - B h_L(x_B,T_B) + Q_R
 \tag{28}
-]
+\]
 
 Where:
 
@@ -594,10 +594,10 @@ And keep two internal level controllers (conventional proportional–integral lo
 This reflects common practice: levels are regulated locally for safety, while composition/temperature objectives are handled by higher-level control.
 
 **Actuator dynamics:** represent each manipulated flow/duty as a first-order lag with saturation:
-[
+\[
 u_{actual}(t+dt)=u_{actual}(t)+\frac{dt}{\tau_u}\left(\text{clip}(u_{cmd},u_{min},u_{max})-u_{actual}(t)\right)
 \tag{29}
-]
+\]
 
 ### 4.2 Observation space (realistic sensors)
 
@@ -753,17 +753,17 @@ For tray i = 1…N:
 
 Top condenser + reflux drum:
 
-[
+\[
 \frac{dM_D}{dt} = V_1 - (R + D),\quad
 \frac{d(M_D x_D)}{dt} = V_1 y_1 - (R + D)x_D
-]
+\]
 
 Bottom reboiler:
 
-[
+\[
 \frac{dM_B}{dt} = L_N - (V_{N+1}+B),\quad
 \frac{d(M_B x_B)}{dt} = L_N x_N - V_{N+1} y_B - B x_B
-]
+\]
 
 ---
 
