@@ -1,6 +1,3 @@
-Here’s the complete corrected Markdown file (converted from your attached `phase1_original.md`). 
-
-```markdown
 ---
 layout: default
 title: Research Foundation
@@ -679,5 +676,3 @@ If either is skipped, you should assume sim-to-real will likely fail for transie
 [6]: https://armfield.co.uk/product/uop3-distillation-columns/ "https://armfield.co.uk/product/uop3-distillation-columns/"
 [7]: https://iupac.org/wp-content/uploads/2017/09/2011-037-2-100_SupportingInfo1-VLE.pdf "https://iupac.org/wp-content/uploads/2017/09/2011-037-2-100_SupportingInfo1-VLE.pdf"
 [8]: https://archive.nptel.ac.in/content/storage2/courses/103103027/pdf/mod7.pdf "https://archive.nptel.ac.in/content/storage2/courses/103103027/pdf/mod7.pdf"
-
-```
