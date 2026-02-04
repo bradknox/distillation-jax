@@ -23,16 +23,16 @@ Finally, for transfer you should treat the simulator as a **calibratable model c
 
 Assume a binary mixture: **light component** (index 1) and **heavy component** (index 2). A column has **N trays**, a **total condenser + reflux drum** at the top, and a **kettle reboiler** at the bottom.
 
-A high-fidelity, control-oriented state for tray *i* (i = 1…N) is:
+A high-fidelity, control-oriented state for tray *i* $i = 1…N$ is:
 
-* (M_i) — **liquid holdup** on tray *i* [mol]
-* (x_i) — **liquid mole fraction of light component** in tray holdup [mol fraction]
-* (U_i) — **internal energy** of the tray control volume [J] (or equivalently (T_i) as a state; see §1.2/§1.3)
+* $M_i$ — **liquid holdup** on tray *i* [mol]
+* $x_i$ — **liquid mole fraction of light component** in tray holdup [mol fraction]
+* $U_i$ — **internal energy** of the tray control volume [J] (or equivalently $T_i$ as a state; see §1.2/§1.3)
 
 Recommended top/bottom vessels:
 
-* Reflux drum (accumulator): (M_D) [mol], (x_D) [mol fraction], (U_D) [J]
-* Reboiler: (M_B) [mol], (x_B) [mol fraction], (U_B) [J]
+* Reflux drum (accumulator): $M_D$ [mol], $x_D$ [mol fraction], $U_D$ [J]
+* Reboiler: $M_B$ [mol], $x_B$ [mol fraction], $U_B$ [J]
 
 Optional but recommended for best transfer (especially for “initial response”):
 
@@ -40,10 +40,10 @@ Optional but recommended for best transfer (especially for “initial response�
 
 **Algebraic (non-state) variables** computed each step:
 
-* (L_i) — liquid flow leaving tray *i* downward [mol/s]
-* (V_i) — vapor flow leaving tray *i* upward [mol/s]
-* (y_i) — vapor mole fraction of light component leaving tray *i* [mol fraction]
-* (P_i) — tray pressure [Pa] or [bar] (often modeled as fixed profile or fixed top + pressure drops)
+* $L_i$ — liquid flow leaving tray *i* downward [mol/s]
+* $V_i$ — vapor flow leaving tray *i* upward [mol/s]
+* $y_i$ — vapor mole fraction of light component leaving tray *i* [mol fraction]
+* $P_i$ — tray pressure [Pa] or [bar] (often modeled as fixed profile or fixed top + pressure drops)
 
 ---
 
@@ -56,15 +56,15 @@ Number trays from top to bottom: tray 1 is top tray below the condenser, tray N 
 
 #### Notation for flows (consistent indexing)
 
-* Liquid flows downward: (L_{i}) leaves tray *i* and enters tray *i+1*
-* Vapor flows upward: (V_{i}) leaves tray *i* and enters tray *i−1*
-* Thus vapor entering tray *i* from below is (V_{i+1}) with composition (y_{i+1}).
-* Liquid entering tray *i* from above is (L_{i-1}) with composition (x_{i-1}).
+* Liquid flows downward: $L_{i}$ leaves tray *i* and enters tray *i+1*
+* Vapor flows upward: $V_{i}$ leaves tray *i* and enters tray *i−1*
+* Thus vapor entering tray *i* from below is $V_{i+1}$ with composition $y_{i+1}$.
+* Liquid entering tray *i* from above is $L_{i-1}$ with composition $x_{i-1}$.
 
-Let the feed enter tray *f* at total molar rate (F) [mol/s], overall light fraction (z_F), and **quality** (q\in[0,1]) (fraction of feed that enters as liquid). Then:
+Let the feed enter tray *f* at total molar rate $F$ [mol/s], overall light fraction $z_F$, and **quality** $q\in[0,1]$ (fraction of feed that enters as liquid). Then:
 
-* Liquid feed part: (F_L = qF) enters liquid phase
-* Vapor feed part: (F_V = (1-q)F) enters vapor phase
+* Liquid feed part: $F_L = qF$ enters liquid phase
+* Vapor feed part: $F_V = (1-q)F$ enters vapor phase
 
 (If you want higher fidelity, compute q from feed enthalpy via a flash; but quality is a workable parameter.)
 
@@ -79,7 +79,7 @@ For i = 1…N, with feed only if i = f:
 \tag{1}
 \]
 
-If you assume vapor holdup is negligible (common in many control-oriented models), then (M_i) is liquid holdup only and Eq. (1) simplifies by dropping vapor holdup dynamics but retaining vapor flow terms as throughputs. (Wittgens & Skogestad discuss both rigorous holdup accounting and simplified forms.) ([Sigurd Skogestad][1])
+If you assume vapor holdup is negligible (common in many control-oriented models), then $M_i$ is liquid holdup only and Eq. (1) simplifies by dropping vapor holdup dynamics but retaining vapor flow terms as throughputs. (Wittgens & Skogestad discuss both rigorous holdup accounting and simplified forms.) ([Sigurd Skogestad][1])
 
 ---
 
@@ -111,18 +111,18 @@ L_{i-1} h_L(x_{i-1},T_{i-1})
 
 * Q_i
   \tag{3}
-  ]
+  \]
 
 Where:
 
-* (h_L(x,T)) is **molar liquid enthalpy** [J/mol]
-* (h_V(y,T)) is **molar vapor enthalpy** [J/mol]
-* (Q_i) is external heat to tray i [W]; typically (Q_i=0) for trays (heat losses handled separately if desired)
+* $h_L(x,T)$ is **molar liquid enthalpy** [J/mol]
+* $h_V(y,T)$ is **molar vapor enthalpy** [J/mol]
+* $Q_i$ is external heat to tray i [W]; typically $Q_i=0$ for trays (heat losses handled separately if desired)
 
 **Implementation note:** you can either:
 
-1. integrate (U_i) and solve for (T_i) each step via an “energy inversion” (e.g., Newton solve on (U_i - U(x_i,T_i)=0)), or
-2. integrate (T_i) directly using an effective heat capacity model (simpler numerically, but be consistent).
+1. integrate $U_i$ and solve for $T_i$ each step via an "energy inversion" (e.g., Newton solve on $U_i - U(x_i,T_i)=0$), or
+2. integrate $T_i$ directly using an effective heat capacity model (simpler numerically, but be consistent).
 
 Wittgens’ rigorous stage model uses internal energy states and equilibrium flash assumptions. ([Sigurd Skogestad][1])
 
@@ -152,14 +152,14 @@ y_1^{*} = \frac{K_1 x}{K_1 x + K_2(1-x)}
 
 #### 1.2.5 Murphree vapor efficiency (recommended non-equilibrium correction) (Equation 6)
 
-Real trays are not perfectly equilibrated. A widely used, calibratable correction is **Murphree vapor efficiency** (E_{M,i}\in(0,1]). Define vapor entering tray i from below as (y_{in}=y_{i+1}). Then:
+Real trays are not perfectly equilibrated. A widely used, calibratable correction is **Murphree vapor efficiency** $E_{M,i}\in(0,1]$. Define vapor entering tray i from below as $y_{in}=y_{i+1}$. Then:
 
 \[
 y_i = y_{in} + E_{M,i}\bigl(y_i^{*} - y_{in}\bigr)
 \tag{6}
 \]
 
-This is attractive for sim-to-real because (E_{M,i}) is **identifiable from data** (e.g., from steady-state composition/temperature profiles and known reflux/boilup conditions) and can be randomized across plausible ranges.
+This is attractive for sim-to-real because $E_{M,i}$ is **identifiable from data** (e.g., from steady-state composition/temperature profiles and known reflux/boilup conditions) and can be randomized across plausible ranges.
 
 ---
 
@@ -187,11 +187,11 @@ Use the NIST Antoine form (as presented on NIST Chemistry WebBook pages):
 
 **Default component Antoine parameters (examples commonly used in teaching/lab columns):**
 
-* **Methanol** (valid 288.10–356.83 K): (A=5.20409,; B=1581.341,; C=-33.50) ([NIST WebBook][2])
-* **Water** (valid 344.00–373.00 K): (A=5.08354,; B=1663.125,; C=-45.622) ([NIST WebBook][3])
-* **Ethanol** (valid 292.77–366.63 K): (A=5.24677,; B=1598.673,; C=-46.424) ([NIST WebBook][4])
-* **Benzene** (valid 287.70–354.07 K): (A=4.01814,; B=1203.835,; C=-53.226)
-* **Toluene** (valid 308.52–384.66 K): (A=4.07827,; B=1343.943,; C=-53.773) ([NIST WebBook][5])
+* **Methanol** (valid 288.10–356.83 K): $A=5.20409,; B=1581.341,; C=-33.50$ ([NIST WebBook][2])
+* **Water** (valid 344.00–373.00 K): $A=5.08354,; B=1663.125,; C=-45.622$ ([NIST WebBook][3])
+* **Ethanol** (valid 292.77–366.63 K): $A=5.24677,; B=1598.673,; C=-46.424$ ([NIST WebBook][4])
+* **Benzene** (valid 287.70–354.07 K): $A=4.01814,; B=1203.835,; C=-53.226$
+* **Toluene** (valid 308.52–384.66 K): $A=4.07827,; B=1343.943,; C=-53.773$ ([NIST WebBook][5])
 
 **Implementation note:** enforce the valid temperature ranges during testing; outside-range extrapolation can destabilize the simulator. Clamp or switch coefficient sets if you extend ranges.
 
@@ -199,7 +199,7 @@ Use the NIST Antoine form (as presented on NIST Chemistry WebBook pages):
 
 #### 1.3.2 Activity coefficients (γ): recommended hierarchy
 
-1. **Ideal Raoult’s law:** (\gamma_1=\gamma_2=1).
+1. **Ideal Raoult’s law:** $\gamma_1=\gamma_2=1$.
    Use for near-ideal systems (many hydrocarbon pairs) or as an initial baseline.
 
 2. **Non-ideal (recommended for sim-to-real): NRTL model.**
@@ -207,7 +207,7 @@ Use the NIST Antoine form (as presented on NIST Chemistry WebBook pages):
 
 **NRTL equations (binary form; Equation 9–11)**
 
-Let (\tau_{12}, \tau_{21}) be dimensionless interaction parameters and (\alpha) be the non-randomness parameter (commonly 0.1–0.3; IUPAC example uses 0.1). Define:
+Let $\tau_{12}, \tau_{21}$ be dimensionless interaction parameters and $\alpha$ be the non-randomness parameter (commonly 0.1–0.3; IUPAC example uses 0.1). Define:
 
 \[
 G_{12}=\exp(-\alpha \tau_{12}),\qquad G_{21}=\exp(-\alpha \tau_{21})
@@ -221,14 +221,14 @@ For a binary mixture, the activity coefficients are:
 
 * \tau_{12}\frac{G_{12}}{(x_2 + x_1 G_{12})^2}\right]
   \tag{10}
-  ]
+  \]
 
 \[
 \ln \gamma_2 = x_1^2\left[\tau_{12}\left(\frac{G_{12}}{x_2 + x_1 G_{12}}\right)^2
 
 * \tau_{21}\frac{G_{21}}{(x_1 + x_2 G_{21})^2}\right]
   \tag{11}
-  ]
+  \]
 
 (These are standard NRTL binary expressions; implement carefully and test against published VLE points.)
 
@@ -244,10 +244,10 @@ For a binary mixture, the activity coefficients are:
 
 #### 1.3.3 Default non-ideal mixture parameters (high-value for teaching columns)
 
-Armfield’s UOP3 teaching column explicitly lists **methanol–water** among standard mixtures. ([Armfield][6]) For methanol + water, an IUPAC supporting-information example specifies **NRTL with α = 0.1** and (\tau) parameters of the form (A + B/T): ([iupac.org][7])
+Armfield’s UOP3 teaching column explicitly lists **methanol–water** among standard mixtures. ([Armfield][6]) For methanol + water, an IUPAC supporting-information example specifies **NRTL with α = 0.1** and $\tau$ parameters of the form (A + B/T): ([iupac.org][7])
 
 * Components: 1 = methanol, 2 = water
-* (\alpha = 0.1)
+* $\alpha = 0.1$
 * (\tau_{12}(T)= 9.23811 + (-2432.61)/T)
 * (\tau_{21}(T)= -5.70743 + (1538.74)/T)
   with (T) in Kelvin. ([iupac.org][7])
@@ -265,7 +265,7 @@ Relative volatility between light (1) and heavy (2):
 \tag{13}
 \]
 
-In simplified teaching models, (\alpha_{rel}) is sometimes treated as constant, yielding:
+In simplified teaching models, $\alpha_{rel}$ is sometimes treated as constant, yielding:
 
 \[
 y_1^{*}=\frac{\alpha_{rel} x}{1 + (\alpha_{rel}-1)x}
@@ -316,10 +316,10 @@ h_V(y,T)= y\left[\Delta h_{vap,1} + c_{p,V,1}(T-T_{ref})\right]
 
 Where:
 
-* (c_p) are molar heat capacities [J/mol/K]
-* (\Delta h_{vap}) are heats of vaporization [J/mol] at a reference (or temperature-dependent if you later upgrade)
+* $c_p$ are molar heat capacities [J/mol/K]
+* $\Delta h_{vap}$ are heats of vaporization [J/mol] at a reference (or temperature-dependent if you later upgrade)
 
-**Why this is acceptable for transfer (initially):** you can fit effective (c_p) and (\Delta h_{vap}) to match measured temperature dynamics and steady-state heat duties. If you later need more accuracy, you can replace these with DIPPR/NIST correlations without changing the simulator architecture.
+**Why this is acceptable for transfer (initially):** you can fit effective $c_p$ and $\Delta h_{vap}$ to match measured temperature dynamics and steady-state heat duties. If you later need more accuracy, you can replace these with DIPPR/NIST correlations without changing the simulator architecture.
 
 ---
 
@@ -347,12 +347,12 @@ dL_{out} = \frac{1}{\tau_L} dM + j, dV_{in}
 
 Where:
 
-* (\tau_L) is a **hydraulic time constant** [s]
+* $\tau_L$ is a **hydraulic time constant** [s]
 * (j) captures the **initial effect of vapor flow on liquid flow** (dimensionless in this deviation form)
 
-Typical ranges reported: (\tau_L \approx 0.5) to (15) s and (j\in[-5,5]). ([Sigurd Skogestad][1])
+Typical ranges reported: $\tau_L \approx 0.5$ to (15) s and $j\in[-5,5]$. ([Sigurd Skogestad][1])
 
-**Implementation pattern:** represent (L_i) (or (L_{out,i})) as an auxiliary dynamic variable with its own first-order response to the “static” weir prediction, plus the vapor coupling term. This improves realism of short-time transients without requiring a full computational-fluid model.
+**Implementation pattern:** represent $L_i$ (or $L_{out,i}$) as an auxiliary dynamic variable with its own first-order response to the “static” weir prediction, plus the vapor coupling term. This improves realism of short-time transients without requiring a full computational-fluid model.
 
 #### 1.4.3 Weir/overflow relation (for “static” liquid outflow)
 
@@ -360,26 +360,26 @@ Use a sharp-crested weir relation (often referred to as a Francis-type correlati
 
 A practical implementable approach:
 
-1. compute a clear liquid height over the weir (h_{ow}) [m] from tray holdup (via geometry and density),
+1. compute a clear liquid height over the weir $h_{ow}$ [m] from tray holdup (via geometry and density),
 2. compute volumetric liquid flow:
-   [
+   \[
    Q_L = C_w, L_w, h_{ow}^{3/2}
    \tag{19}
-   ]
+   \]
 3. convert to molar flow:
-   [
+   \[
    L = Q_L \frac{\rho_L}{\overline{MW}}
    \tag{20}
-   ]
+   \]
 
 Where:
 
-* (L_w) is weir length [m]
-* (\rho_L) is liquid density [kg/m³]
-* (\overline{MW}) is mixture molecular weight [kg/mol]
-* (C_w) is a weir coefficient (set by tray design; calibrate)
+* $L_w$ is weir length [m]
+* $\rho_L$ is liquid density [kg/m³]
+* $\overline{MW}$ is mixture molecular weight [kg/mol]
+* $C_w$ is a weir coefficient (set by tray design; calibrate)
 
-If you want to avoid “deriving” (h_{ow}) from geometry at first, you can parameterize (L) as a monotone function of holdup and fit parameters from step tests; but for best fidelity, implement geometry.
+If you want to avoid “deriving” $h_{ow}$ from geometry at first, you can parameterize (L) as a monotone function of holdup and fit parameters from step tests; but for best fidelity, implement geometry.
 
 #### 1.4.4 Flooding constraint (Fair correlation) (Equation 21)
 
@@ -393,14 +393,14 @@ U_{n,f} = C_{sbf}\left(\frac{\sigma}{20}\right)^{0.2}
 
 Where:
 
-* (U_{n,f}) = flooding superficial gas velocity [m/s]
-* (C_{sbf}) = capacity parameter (depends on tray spacing and flow parameter)
-* (\sigma) = surface tension [mN/m]
-* (\rho_L,\rho_V) = liquid and vapor densities
+* $U_{n,f}$ = flooding superficial gas velocity [m/s]
+* $C_{sbf}$ = capacity parameter (depends on tray spacing and flow parameter)
+* $\sigma$ = surface tension [mN/m]
+* $\rho_L,\rho_V$ = liquid and vapor densities
 
 Design guidance: operate at ~80–85% of flooding for non-foaming liquids. ([NPTEL][8])
 
-**Simulator use:** treat flooding as a hard constraint (terminate episode) or as a steep penalty once (U_n/U_{n,f}) exceeds ~0.85–0.9.
+**Simulator use:** treat flooding as a hard constraint (terminate episode) or as a steep penalty once $U_n/U_{n,f}$ exceeds ~0.85–0.9.
 
 #### 1.4.5 Weeping constraint (weep-point velocity) (Equation 22)
 
@@ -413,16 +413,16 @@ U_{min} = \frac{K_2 - 0.9(25.4 - d_h)}{\sqrt{\rho_V}}
 
 Where:
 
-* (d_h) is hole diameter [mm]
-* (K_2) is a tray-specific coefficient (from design correlations)
+* $d_h$ is hole diameter [mm]
+* $K_2$ is a tray-specific coefficient (from design correlations)
 
-**Simulator use:** penalize operation where (U_n < U_{min}) (loss of contacting efficiency, possible “dumping”).
+**Simulator use:** penalize operation where $U_n < U_{min}$ (loss of contacting efficiency, possible “dumping”).
 
 #### 1.4.6 Tray efficiency dependency
 
 Tray efficiency depends on flow regimes (flooding/weeping) and design; Armfield explicitly lists experiments measuring “column efficiency as a function of boil-up rate” under total reflux. ([Armfield][6])
 
-**Practical sim-to-real strategy:** model (E_{M,i}) as:
+**Practical sim-to-real strategy:** model $E_{M,i}$ as:
 
 * nominal tray efficiency (fit from data),
 * degraded as flooding/weeping are approached (smooth function),
@@ -438,7 +438,7 @@ Armfield’s UOP3 includes an overhead condenser and reflux tank, with reflux co
 
 Model a **total condenser**: all incoming vapor condenses to liquid in the drum.
 
-Let vapor from tray 1 enter condenser at (V_1, y_1). Then condensed liquid composition is approximately (x_D \approx y_1) (for total condensation).
+Let vapor from tray 1 enter condenser at $V_1, y_1$. Then condensed liquid composition is approximately $x_D \approx y_1$ (for total condensation).
 
 Reflux drum holdup dynamics:
 \[
@@ -458,9 +458,9 @@ Energy balance:
 \tag{25}
 \]
 
-Where (Q_C) [W] is condenser duty (heat removed). Often you will specify condenser outlet temperature or pressure and solve for required (Q_C); for RL, (Q_C) is usually not a manipulated variable.
+Where $Q_C$ [W] is condenser duty (heat removed). Often you will specify condenser outlet temperature or pressure and solve for required $Q_C$; for RL, $Q_C$ is usually not a manipulated variable.
 
-Reflux to tray 1: (L_0 = R), composition (x_0=x_D), temperature (T_0=T_D).
+Reflux to tray 1: $L_0 = R$, composition $x_0=x_D$, temperature $T_0=T_D$.
 
 #### 1.5.2 Reboiler (kettle type)
 
@@ -484,8 +484,8 @@ Energy balance:
 
 Where:
 
-* (Q_R) [W] is reboiler duty (a primary manipulated variable)
-* (y_B) is vapor composition in equilibrium with reboiler liquid (use Eq. 5)
+* $Q_R$ [W] is reboiler duty (a primary manipulated variable)
+* $y_B$ is vapor composition in equilibrium with reboiler liquid (use Eq. 5)
 
 ---
 
@@ -500,12 +500,12 @@ A good default configuration (explicitly intended as “teaching column” scale
 | Parameter                  |    Symbol |         Default | Units | Notes / justification                                                              |
 | -------------------------- | --------: | --------------: | ----- | ---------------------------------------------------------------------------------- |
 | Number of trays            |       (N) |               8 | –     | UOP3 has 8 sieve plates ([Armfield][6])                                            |
-| Column internal diameter   |     (D_c) |            0.05 | m     | UOP3 plate column is 50 mm diameter ([Armfield][6])                                |
+| Column internal diameter   |     $D_c$ |            0.05 | m     | UOP3 plate column is 50 mm diameter ([Armfield][6])                                |
 | Tray spacing               |       (S) |       0.20–0.30 | m     | Not stated on page; treat as configurable; affects flooding correlation and holdup |
-| Weir height                |     (h_w) |       0.01–0.03 | m     | Typical lab tray weirs; treat as configurable and fit if known                     |
-| Weir length                |     (L_w) | 0.6–0.9 × (D_c) | m     | Approximate; geometry-dependent                                                    |
-| Downcomer area fraction    | (A_d/A_t) |       0.08–0.15 | –     | Typical tray design range; fit if known                                            |
-| Hole diameter (sieve tray) |     (d_h) |             2–5 | mm    | Needed for weeping constraint                                                      |
+| Weir height                |     $h_w$ |       0.01–0.03 | m     | Typical lab tray weirs; treat as configurable and fit if known                     |
+| Weir length                |     $L_w$ | 0.6–0.9 × $D_c$ | m     | Approximate; geometry-dependent                                                    |
+| Downcomer area fraction    | $A_d/A_t$ |       0.08–0.15 | –     | Typical tray design range; fit if known                                            |
+| Hole diameter (sieve tray) |     $d_h$ |             2–5 | mm    | Needed for weeping constraint                                                      |
 | Operating pressure range   |       (P) |         0.2–1.0 | bar   | UOP3 supports reduced pressure down to 200 mbar ([Armfield][6])                    |
 
 For sim-to-real you should replace defaults with the real column’s design drawings when available.
@@ -518,9 +518,9 @@ For sim-to-real you should replace defaults with the real column’s design draw
 
 **Antoine coefficients:** see §1.3.1 for methanol and water. ([NIST WebBook][2])
 
-**NRTL parameters (methanol=1, water=2):**
+**NRTL parameters $methanol=1, water=2$:**
 
-* (\alpha=0.1)
+* $\alpha=0.1$
 * (\tau_{12}(T)= 9.23811 - 2432.61/T)
 * (\tau_{21}(T)= -5.70743 + 1538.74/T) ([iupac.org][7])
 
@@ -568,8 +568,8 @@ For RL training you usually want a **fixed-step** integrator (for determinism, J
 
 Define two timesteps:
 
-* **Simulator internal timestep** (dt_{int}): chosen to resolve hydraulics. A conservative rule is (dt_{int} \le 0.1\tau_L). With (\tau_L) as low as 0.5 s, this suggests (dt_{int}\approx 0.05) s in the worst case. ([Sigurd Skogestad][1])
-* **RL environment timestep** (dt_{env}): 1–10 s (or larger), implemented by taking multiple internal steps per environment step.
+* **Simulator internal timestep** $dt_{int}$: chosen to resolve hydraulics. A conservative rule is $dt_{int} \le 0.1\tau_L$. With $\tau_L$ as low as 0.5 s, this suggests $dt_{int}\approx 0.05$ s in the worst case. ([Sigurd Skogestad][1])
+* **RL environment timestep** $dt_{env}$: 1–10 s (or larger), implemented by taking multiple internal steps per environment step.
 
 This structure preserves physical fidelity while keeping RL rollouts efficient.
 
@@ -583,8 +583,8 @@ For transfer, the most realistic and safest interface is usually **supervisory c
 
 A strong default action vector:
 
-1. (RR_{sp}) — reflux ratio setpoint (or reflux flow setpoint)
-2. (Q_{R,sp}) — reboiler duty setpoint (or boilup setpoint)
+1. $RR_{sp}$ — reflux ratio setpoint (or reflux flow setpoint)
+2. $Q_{R,sp}$ — reboiler duty setpoint (or boilup setpoint)
 
 And keep two internal level controllers (conventional proportional–integral loops) to regulate:
 
@@ -605,9 +605,9 @@ For an Armfield-like lab column, temperatures on each plate are explicitly measu
 
 Recommended observation vector:
 
-* Tray temperatures (T_1,\dots,T_N) (or a subset if you want partial observability)
-* Reflux drum level (or holdup) (M_D)
-* Reboiler level (or holdup) (M_B)
+* Tray temperatures $T_1,\dots,T_N$ (or a subset if you want partial observability)
+* Reflux drum level (or holdup) $M_D$
+* Reboiler level (or holdup) $M_B$
 * Column pressure drop (Armfield lists a differential manometer top-to-bottom) ([Armfield][6])
 * Key flows: reflux, distillate, bottoms, feed, boilup (as measured or inferred)
 
@@ -617,10 +617,10 @@ Recommended observation vector:
 
 Include at least:
 
-* **Flooding constraint:** terminate or steep-penalize when (U_n/U_{n,f}\gtrsim 0.85–0.9). ([NPTEL][8])
-* **Weeping constraint:** penalize when (U_n < U_{min}). ([NPTEL][8])
-* **Level constraints:** (M_D) and (M_B) must stay within safe bounds (avoid dry-out/overflow).
-* **Composition bounds:** enforce (x_i,y_i\in[0,1]) and nonnegative holdups.
+* **Flooding constraint:** terminate or steep-penalize when $U_n/U_{n,f}\gtrsim 0.85–0.9$. ([NPTEL][8])
+* **Weeping constraint:** penalize when $U_n < U_{min}$. ([NPTEL][8])
+* **Level constraints:** $M_D$ and $M_B$ must stay within safe bounds (avoid dry-out/overflow).
+* **Composition bounds:** enforce $x_i,y_i\in[0,1]$ and nonnegative holdups.
 * **Thermal bounds:** enforce max temperature consistent with equipment (Armfield notes at least 130 °C maximum inside column). ([Armfield][6])
 
 ---
@@ -639,7 +639,7 @@ Hydraulics:
 
 * Flooding velocity calculation reproduces NPTEL example calculations for given densities/surface tension. ([NPTEL][8])
 * Weeping threshold behaves correctly as a function of hole diameter and vapor density. ([NPTEL][8])
-* Linear hydraulics law uses plausible (\tau_L) and (j) ranges and produces reasonable initial responses. ([Sigurd Skogestad][1])
+* Linear hydraulics law uses plausible $\tau_L$ and (j) ranges and produces reasonable initial responses. ([Sigurd Skogestad][1])
 
 ### 5.2 Integration tests (column-level)
 
@@ -663,8 +663,8 @@ Even if you do not use Armfield hardware, these define realistic validation beha
 
 At every step:
 
-* (0\le x_i \le 1), (0\le y_i \le 1)
-* (M_i, M_D, M_B \ge 0)
+* $0\le x_i \le 1$, $0\le y_i \le 1$
+* $M_i, M_D, M_B \ge 0$
 * No NaN/Inf
 * Flooding/weeping indicators computed and recorded
 * Enforce action/actuator saturations
@@ -674,7 +674,7 @@ At every step:
 ## 6. Key References (annotated)
 
 1. **Wittgens & Skogestad (2000)**, *Evaluation of Dynamic Models of Distillation Columns with Emphasis on the Initial Response.*
-   Core reference for why hydraulics matters, and for a rigorous stage model structure and control-relevant hydraulic parameters ((\tau_L), (j)). ([Sigurd Skogestad][1])
+   Core reference for why hydraulics matters, and for a rigorous stage model structure and control-relevant hydraulic parameters ($\tau_L$, (j)). ([Sigurd Skogestad][1])
 
 2. **NPTEL Chemical Engineering Design II, Module 7 (tray design)**
    Provides implementable flooding and weeping correlations (Fair correlation; weep-point velocity). ([NPTEL][8])
@@ -695,61 +695,61 @@ At every step:
 For tray i = 1…N:
 
 1. Total holdup:
-   [
+   \[
    \frac{dM_i}{dt} = L_{i-1} + \mathbb{1}*{i=f}qF + V*{i+1} + \mathbb{1}_{i=f}(1-q)F - L_i - V_i
-   ]
+   \]
 
 2. Light component:
-   [
-   \frac{d(M_i x_i)}{dt} = L_{i-1}x_{i-1} + \mathbb{1}*{i=f}qF z_F + V*{i+1}y_{i+1} + \mathbb{1}_{i=f}(1-q)F z_F - L_i x_i - V_i y_i
-   ]
+   \[
+   \frac{d$M_i x_i$}{dt} = L_{i-1}x_{i-1} + \mathbb{1}*{i=f}qF z_F + V*{i+1}y_{i+1} + \mathbb{1}_{i=f}(1-q)F z_F - L_i x_i - V_i y_i
+   \]
 
 3. Energy:
-   [
+   \[
    \frac{dU_i}{dt} =
-   L_{i-1} h_L(x_{i-1},T_{i-1})
+   L_{i-1} h_L$x_{i-1},T_{i-1}$
 
 * \mathbb{1}_{i=f}qF h_F^{(L)}
-* V_{i+1} h_V(y_{i+1},T_{i+1})
+* V_{i+1} h_V$y_{i+1},T_{i+1}$
 * \mathbb{1}_{i=f}(1-q)F h_F^{(V)}
 
-- L_i h_L(x_i,T_i)
-- V_i h_V(y_i,T_i)
-  ]
+- L_i h_L$x_i,T_i$
+- V_i h_V$y_i,T_i$
+  \]
 
 4. Vapor pressure (Antoine):
-   [
-   \log_{10}!\bigl(P_k^{sat}[\mathrm{bar}]\bigr)= A_k - \frac{B_k}{T[\mathrm{K}] + C_k}
-   ]
+   \[
+   \log_{10}!\bigl$P_k^{sat}[\mathrm{bar}]\bigr$= A_k - \frac{B_k}{T[\mathrm{K}] + C_k}
+   \]
 
 5. NRTL:
-   [
+   \[
    \tau_{12}=A_{12}+B_{12}/T,\quad \tau_{21}=A_{21}+B_{21}/T,\quad
    G_{12}=e^{-\alpha\tau_{12}},\quad G_{21}=e^{-\alpha\tau_{21}}
-   ]
-   [
-   (\ln\gamma_1,\ln\gamma_2)\ \text{from Eqs. (10–11)}
-   ]
+   \]
+   \[
+   $\ln\gamma_1,\ln\gamma_2$\ \text{from Eqs. (10–11)}
+   \]
 
 6. K-values:
-   [
+   \[
    K_k=\gamma_k P_k^{sat}/P
-   ]
+   \]
 
 7. Equilibrium vapor composition:
-   [
+   \[
    y_1^{*}=\frac{K_1 x}{K_1 x + K_2(1-x)}
-   ]
+   \]
 
 8. Murphree efficiency:
-   [
-   y_i = y_{i+1} + E_{M,i}(y_i^{*}-y_{i+1})
-   ]
+   \[
+   y_i = y_{i+1} + E_{M,i}$y_i^{*}-y_{i+1}$
+   \]
 
 9. Hydraulic coupling (recommended):
-   [
+   \[
    dL_{out} = \frac{1}{\tau_L} dM + j, dV_{in}
-   ]
+   \]
 
 Top condenser + reflux drum:
 
@@ -771,17 +771,17 @@ Bottom reboiler:
 
 **Hydraulics (control-relevant):**
 
-* (\tau_L): 0.5–15 s ([Sigurd Skogestad][1])
+* $\tau_L$: 0.5–15 s ([Sigurd Skogestad][1])
 * (j): −5 to +5 ([Sigurd Skogestad][1])
-* (E_{M,i}): start 0.5–0.9 (fit later; randomize per tray)
+* $E_{M,i}$: start 0.5–0.9 (fit later; randomize per tray)
 
 **Teaching column (Armfield-like):**
 
-* (D_c = 0.05) m, (N=8), downcomers, per-tray temperature sensors, reflux 0–100%, pressure down to 0.2 bar ([Armfield][6])
+* $D_c = 0.05$ m, $N=8$, downcomers, per-tray temperature sensors, reflux 0–100%, pressure down to 0.2 bar ([Armfield][6])
 
 **Methanol–water NRTL:**
 
-* (\alpha=0.1)
+* $\alpha=0.1$
 * (\tau_{12}(T)= 9.23811 - 2432.61/T)
 * (\tau_{21}(T)= -5.70743 + 1538.74/T) ([iupac.org][7])
 
@@ -797,7 +797,7 @@ Bottom reboiler:
 Proceed to Phase 2 implementation exactly as your plan outlines, **but require two non-negotiables from the implementer**:
 
 1. **Implement energy balance + non-ideal VLE (NRTL) from day 1**, using methanol–water as the default mixture (because you can cite parameters and it stresses the thermo stack). ([iupac.org][7])
-2. **Implement hydraulic initial-response realism** via (\tau_L) and (j) (Eq. 18), and enforce flooding/weeping constraints (Eqs. 21–22). ([Sigurd Skogestad][1])
+2. **Implement hydraulic initial-response realism** via $\tau_L$ and (j) (Eq. 18), and enforce flooding/weeping constraints (Eqs. 21–22). ([Sigurd Skogestad][1])
 
 If either is skipped, you should assume sim-to-real will likely fail for transient behaviors, because RL will exploit the simulator’s incorrect short-time dynamics.
 
