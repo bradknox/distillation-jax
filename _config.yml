@@ -1,0 +1,45 @@
+# Jekyll configuration for GitHub Pages with MathJax support
+title: Distillation JAX
+description: JAX-based distillation column simulator with NRTL thermodynamics and Gymnasium RL environment
+baseurl: "/distillation-jax"
+url: "https://bradknox.github.io"
+
+# Markdown processor
+markdown: kramdown
+
+kramdown:
+  math_engine: null  # Disable kramdown's math engine; let MathJax handle it
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
+# GitHub Pages plugins
+plugins:
+  - jekyll-seo-tag
+
+# Exclude from build
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - "*.py"
+  - pyproject.toml
+  - tests/
+  - scripts/
+  - jax_distillation/
+  - examples/
+  - artifacts/
+  - .gitignore
+
+# Default layout for all pages
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+  - scope:
+      path: "docs"
+    values:
+      layout: "default"

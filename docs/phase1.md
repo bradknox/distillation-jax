@@ -1,4 +1,7 @@
 ---
+layout: default
+title: Research Foundation
+---
 
 # Distillation Column Simulator: Research Foundation
 

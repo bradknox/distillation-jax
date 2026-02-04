@@ -1,3 +1,8 @@
+---
+layout: default
+title: Handoff Documentation
+---
+
 # JAX Distillation Simulator - Handoff Documentation
 
 ## Overview

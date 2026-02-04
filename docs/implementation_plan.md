@@ -1,3 +1,8 @@
+---
+layout: default
+title: Implementation Plan
+---
+
 # Phase 2 Implementation Plan: JAX-Based Distillation Column Simulator
 
 ## Overview
